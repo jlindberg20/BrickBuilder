@@ -1,0 +1,5 @@
+pandas
+pyarrow     # for Parquet export
+python-dotenv
+requests
+tqdm
