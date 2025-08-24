@@ -206,7 +206,7 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
-# --- BrickBuilder Phase 0 data rules ---
+# --- BrickBuilder Phase 0 data rules. Updated ---
 
 # Raw data dumps (Rebrickable, BrickLink, BrickOwl, LDraw)
 data/raw/
@@ -226,8 +226,3 @@ data/raw/**
 meshes/
 voxels/
 
-<<<<<<< HEAD
-
-=======
-data/raw/
->>>>>>> b618476 (Stop tracking bulk data; added to .gitignore)
