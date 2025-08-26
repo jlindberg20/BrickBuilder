@@ -1,15 +1,12 @@
-# scripts/reb_build_parts.py
-from __future__ import annotations
-import os, json, hashlib, time
+import os, json, time, hashlib
 from pathlib import Path
-from typing import Dict, Any, Iterable, List, Set
+from typing import Dict, Any
 import pandas as pd
 
+# ------------------ Config ------------------
 ENV = {
-    "DATA_RAW": os.getenv("DATA_RAW", "./data/raw"),
     "DATA_RAW_REB": os.getenv("DATA_RAW_REB", "./data/raw/rebrickable"),
     "DATA_PROCESSED": os.getenv("DATA_PROCESSED", "./data/processed"),
-    "CHUNK_ROWS": int(os.getenv("CHUNK_ROWS", "500000")),
 }
 
 REB = Path(ENV["DATA_RAW_REB"])
@@ -18,151 +15,185 @@ OUT_JSONL = PROCESSED / "parts_unified.jsonl"
 OUT_CSV = PROCESSED / "parts_preview.csv"
 MANIFEST = PROCESSED / "_manifest.json"
 
-SRC_PARTS = REB / "parts.csv"
-SRC_CATS = REB / "part_categories.csv"
-SRC_ELEMS = REB / "elements.csv"
+CSV_FILES = {
+    "parts": "parts.csv",
+    "categories": "part_categories.csv",
+    "colors": "colors.csv",
+    "elements": "elements.csv",
+    "relationships": "part_relationships.csv",
+    "minifigs": "minifigs.csv",
+    "inventories": "inventories.csv",
+    "inventory_parts": "inventory_parts.csv",
+    "inventory_minifigs": "inventory_minifigs.csv",
+}
 
-REQUIRED = [SRC_PARTS, SRC_CATS, SRC_ELEMS]
-
+# ------------------ Utilities ------------------
 def file_fingerprint(p: Path) -> Dict[str, Any]:
     stat = p.stat()
     return {"size": stat.st_size, "mtime": int(stat.st_mtime)}
 
 def load_manifest() -> Dict[str, Any]:
     if MANIFEST.exists():
-        with open(MANIFEST, "r", encoding="utf-8") as f:
-            return json.load(f)
+        return json.loads(MANIFEST.read_text())
     return {}
 
 def save_manifest(d: Dict[str, Any]):
     PROCESSED.mkdir(parents=True, exist_ok=True)
-    with open(MANIFEST, "w", encoding="utf-8") as f:
-        json.dump(d, f, indent=2, sort_keys=True)
+    MANIFEST.write_text(json.dumps(d, indent=2, sort_keys=True))
 
 def inputs_signature() -> Dict[str, Any]:
-    return {str(p): file_fingerprint(p) for p in REQUIRED}
+    return {k: file_fingerprint(REB / fn) for k, fn in CSV_FILES.items()}
 
 def manifest_matches(current: Dict[str, Any], manifest: Dict[str, Any]) -> bool:
-    prev = manifest.get("inputs", {})
-    return prev == current
+    return manifest.get("inputs", {}) == current
 
-def compute_color_variants() -> Dict[str, List[int]]:
-    """
-    Stream elements.csv to build a set of colors per part_num.
-    elements.csv columns (Rebrickable): element_id, part_num, color_id, design_id (varies by version)
-    """
-    color_map: Dict[str, Set[int]] = {}
-    usecols = ["part_num", "color_id"]
-    dtype = {"part_num": "string", "color_id": "Int64"}
+def now_ts():
+    return int(time.time())
 
-    for chunk in pd.read_csv(SRC_ELEMS, usecols=usecols, dtype=dtype, chunksize=ENV["CHUNK_ROWS"]):
-        chunk = chunk.dropna(subset=["part_num", "color_id"])
-        for part_num, grp in chunk.groupby("part_num"):
-            colors = grp["color_id"].dropna().astype("int").unique().tolist()
-            if part_num not in color_map:
-                color_map[part_num] = set(colors)
-            else:
-                color_map[part_num].update(colors)
-    # Convert sets to sorted lists
-    return {k: sorted(list(v)) for k, v in color_map.items()}
+# ------------------ Ingestion ------------------
+def load_all() -> Dict[str, pd.DataFrame]:
+    dfs = {}
+    for key, fn in CSV_FILES.items():
+        path = REB / fn
+        if not path.exists():
+            raise FileNotFoundError(f"Missing required file: {path}")
+        dfs[key] = pd.read_csv(path)
+    return dfs
 
-def build_unified_records():
-    PROCESSED.mkdir(parents=True, exist_ok=True)
+# ------------------ Enrichment logic ------------------
+def build_records(dfs: Dict[str, pd.DataFrame]):
+    ts = now_ts()
 
-    # Load parts + categories
-    parts = pd.read_csv(SRC_PARTS, dtype={"part_num": "string", "name": "string", "part_cat_id": "Int64"})
-    cats = pd.read_csv(SRC_CATS, dtype={"id": "Int64", "name": "string"}).rename(columns={"id":"part_cat_id", "name":"category_name"})
-    parts = parts.merge(cats, how="left", on="part_cat_id")
+    parts = dfs["parts"].merge(
+        dfs["categories"].rename(columns={"id": "part_cat_id", "name": "category_name"}),
+        how="left", on="part_cat_id"
+    )
 
-    # Compute color variants
-    color_variants = compute_color_variants()
+    # --- Colors
+    colors = dfs["colors"].rename(columns={"id": "rb_color_id"})
 
-    # Prepare outputs
-    if OUT_JSONL.exists():
-        OUT_JSONL.unlink()
+    color_lookup = {
+        row["rb_color_id"]: {
+            "id": f"rb:{row['rb_color_id']}",
+            "name": row["name"],
+            "rgb": row["rgb"],
+            "is_trans": bool(row["is_trans"])
+        }
+        for _, row in colors.iterrows()
+    }
+
+    # --- Elements: part+color combos
+    elem_df = dfs["elements"][["part_num", "color_id"]].dropna()
+    part_to_colors = (
+        elem_df.groupby("part_num")["color_id"]
+        .apply(lambda s: sorted(set(int(x) for x in s)))
+        .to_dict()
+    )
+
+    # --- Inventory usage counts
+    ip = dfs["inventory_parts"][["inventory_id", "part_num"]]
+    su = ip.groupby("part_num")["inventory_id"].nunique().to_dict()
+
+    # --- Relationships
+    rels = dfs["relationships"]
+
+    # --- Minifigs
+    minifigs = dfs["minifigs"]
+    im = dfs["inventory_minifigs"][["inventory_id", "fig_num"]]
+    su_minifigs = im.groupby("fig_num")["inventory_id"].nunique().to_dict()
+
+    # ---------------- Build records ----------------
     preview_rows = []
 
-    # Emit universal JSONL per part
+    if OUT_JSONL.exists():
+        OUT_JSONL.unlink()
     with open(OUT_JSONL, "w", encoding="utf-8") as f:
+
+        # Parts
         for _, row in parts.iterrows():
             part_num = row["part_num"]
-            name = (row["name"] or "").strip() if pd.notna(row["name"]) else ""
-            cat = (row["category_name"] or "").strip() if pd.notna(row["category_name"]) else ""
+            color_ids = part_to_colors.get(part_num, [])
+            color_variants = [color_lookup[cid] for cid in color_ids if cid in color_lookup]
+
+            rel_sub = rels[(rels["parent_part_num"] == part_num) | (rels["child_part_num"] == part_num)]
+            rel_list = []
+            for _, rr in rel_sub.iterrows():
+                rel_list.append({
+                    "rel_type": rr["rel_type"],
+                    "parent": rr["parent_part_num"],
+                    "child": rr["child_part_num"],
+                })
 
             record = {
                 "id": f"part:rb:{part_num}",
-                "type": "part",  # minifigs handled separately later
-                "name": name,
+                "type": "part",
+                "name": row["name"],
                 "source_ids": {"rb": {"part_num": part_num}},
                 "external_links": {"rebrickable": f"https://rebrickable.com/parts/{part_num}/"},
-                "category": {
-                    "id": f"rb:{int(row['part_cat_id'])}" if pd.notna(row["part_cat_id"]) else None,
-                    "name": cat or None,
-                },
-                "geometry": {
-                    # We do not have LDraw link mapping yet at this step.
-                    "ldraw": {"file": None, "dimensions_lu": {"x": None, "y": None, "z": None}},
-                    "mesh": {"glb_path": None, "checksum": None},
-                    "voxel": {"vox_path": None, "grid_size": None},
-                },
+                "category": {"id": f"rb:{row['part_cat_id']}", "name": row["category_name"]},
+                "geometry": {"ldraw": {"file": None}, "mesh": None, "voxel": None},
                 "color_compatibility": {
-                    "valid_color_ids": color_variants.get(part_num, []),
-                    "color_substitution_rules": [],
+                    "variants": color_variants,
+                    "count": len(color_variants)
                 },
-                "marketplace": {
-                    "bricklink": {"part_id": None, "avg_price_usd": None, "stock": None},
-                    "brickowl": {"part_id": None, "avg_price_usd": None, "stock": None},
-                    "rebrickable": {"element_count": None},  # placeholder, can be filled later if needed
+                "relationships": rel_list,
+                "stats": {
+                    "set_usage_count": int(su.get(part_num, 0)),
+                    "color_count": len(color_variants),
                 },
-                "tags": [],
-                "metadata": {
-                    "created_at": int(time.time()),
-                    "updated_at": int(time.time()),
-                    "deprecation": {"is_deprecated": False, "note": None},
-                },
-                "search": {
-                    "aliases": [],
-                    "keywords": [name, cat, part_num],
-                    "embedding_id": None,
-                },
-                "bom_rules": {"preferred_substitutes": [], "prohibited_in_builds": False},
-                "version": {"schema": "1.0.0", "source": "rebrickable_csv:parts+elements"},
+                "metadata": {"created_at": ts, "updated_at": ts},
             }
 
             f.write(json.dumps(record, ensure_ascii=False) + "\n")
-
-            # Keep a small preview subset for quick viewing
             preview_rows.append({
                 "id": record["id"],
-                "name": name,
-                "category": cat,
-                "rb_part_num": part_num,
-                "valid_color_ct": len(record["color_compatibility"]["valid_color_ids"])
+                "name": record["name"],
+                "category": record["category"]["name"],
+                "colors": record["stats"]["color_count"],
+                "set_usage": record["stats"]["set_usage_count"]
             })
 
-    # Write CSV preview (top 10k rows to keep it light)
-    preview_df = pd.DataFrame(preview_rows[:10000])
-    preview_df.to_csv(OUT_CSV, index=False)
+        # Minifigs
+        for _, row in minifigs.iterrows():
+            fig_num = row["fig_num"]
+            record = {
+                "id": f"minifig:rb:{fig_num}",
+                "type": "minifig",
+                "name": row["name"],
+                "source_ids": {"rb": {"fig_num": fig_num}},
+                "external_links": {"rebrickable": f"https://rebrickable.com/minifigs/{fig_num}/"},
+                "stats": {
+                    "set_usage_count": int(su_minifigs.get(fig_num, 0))
+                },
+                "metadata": {"created_at": ts, "updated_at": ts},
+            }
+            f.write(json.dumps(record, ensure_ascii=False) + "\n")
+            preview_rows.append({
+                "id": record["id"],
+                "name": record["name"],
+                "category": "minifig",
+                "colors": None,
+                "set_usage": record["stats"]["set_usage_count"]
+            })
 
+    pd.DataFrame(preview_rows[:10000]).to_csv(OUT_CSV, index=False)
+
+# ------------------ Main ------------------
 def main():
-    # Guard: inputs present
-    missing = [str(p) for p in REQUIRED if not p.exists()]
-    if missing:
-        raise SystemExit(f"Missing required source files:\n" + "\n".join(missing))
+    PROCESSED.mkdir(parents=True, exist_ok=True)
 
     current_inputs = inputs_signature()
     manifest = load_manifest()
-
     if manifest_matches(current_inputs, manifest):
-        print("No changes in inputs; skipping rebuild.")
-        print(f"Existing outputs:\n  {OUT_JSONL}\n  {OUT_CSV}")
+        print("No changes; skipping rebuild.")
+        print(f"Existing: {OUT_JSONL}")
         return
 
-    print("Building universal parts from Rebrickable…")
-    build_unified_records()
-    save_manifest({"inputs": current_inputs, "generated": int(time.time())})
-    print("Done.")
-    print(f"Wrote:\n  {OUT_JSONL}\n  {OUT_CSV}\n  {MANIFEST}")
+    print("Building enriched universal parts dataset (2a–2d)…")
+    dfs = load_all()
+    build_records(dfs)
+    save_manifest({"inputs": current_inputs, "generated": now_ts()})
+    print("Done. Wrote:", OUT_JSONL, OUT_CSV)
 
 if __name__ == "__main__":
     main()

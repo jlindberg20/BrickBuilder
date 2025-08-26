@@ -1,0 +1,41 @@
+{
+  "generated": 1756174945,
+  "inputs": {
+    "categories": {
+      "mtime": 1755958320,
+      "size": 1660
+    },
+    "colors": {
+      "mtime": 1755958320,
+      "size": 13586
+    },
+    "elements": {
+      "mtime": 1755958322,
+      "size": 2654119
+    },
+    "inventories": {
+      "mtime": 1755958322,
+      "size": 807412
+    },
+    "inventory_minifigs": {
+      "mtime": 1755958354,
+      "size": 479962
+    },
+    "inventory_parts": {
+      "mtime": 1755958342,
+      "size": 120410203
+    },
+    "minifigs": {
+      "mtime": 1755958324,
+      "size": 1748495
+    },
+    "parts": {
+      "mtime": 1755958320,
+      "size": 5256014
+    },
+    "relationships": {
+      "mtime": 1755958354,
+      "size": 734598
+    }
+  }
+}
