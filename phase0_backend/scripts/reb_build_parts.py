@@ -82,13 +82,34 @@ def build_records(dfs: Dict[str, pd.DataFrame]):
         for _, row in colors.iterrows()
     }
 
-    # --- Elements: part+color combos
-    elem_df = dfs["elements"][["part_num", "color_id"]].dropna()
+    # --- Elements: true elements (unique element_id per part) + color variants
+    ele_cols = ["element_id", "part_num", "color_id"]
+    ele = dfs["elements"][ele_cols].dropna(subset=["part_num", "color_id"])
+
+    # element_count per part: prefer unique element_id if present, else row count fallback
+    if "element_id" in ele.columns:
+        part_to_element_ct = (
+            ele.dropna(subset=["element_id"])
+            .groupby("part_num")["element_id"]
+            .nunique()
+            .to_dict()
+        )
+    else:
+        part_to_element_ct = ele.groupby("part_num").size().to_dict()
+
+    # distinct color ids per part (for variants list)
     part_to_colors = (
-        elem_df.groupby("part_num")["color_id"]
-        .apply(lambda s: sorted(set(int(x) for x in s)))
+        ele.groupby("part_num")["color_id"]
+        .apply(lambda s: sorted(set(int(c) for c in s if pd.notna(c))))
         .to_dict()
     )
+
+    # alias for older references (some versions used this name)
+    part_to_color_ids = part_to_colors
+
+
+
+
 
     # --- Inventory usage counts
     ip = dfs["inventory_parts"][["inventory_id", "part_num"]]
@@ -140,6 +161,7 @@ def build_records(dfs: Dict[str, pd.DataFrame]):
                 "stats": {
                     "set_usage_count": int(su.get(part_num, 0)),
                     "color_count": len(color_variants),
+                    "element_count": int(part_to_element_ct.get(part_num, 0)),
                 },
                 "metadata": {"created_at": ts, "updated_at": ts},
             }
