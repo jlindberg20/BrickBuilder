@@ -210,6 +210,8 @@ __marimo__/
 
 # Ignore all raw and processed data dumps
 /data/raw/
+/data/
+/data/mesh/
 /data/processed/
 /data/canonical/
 /data/tmp/
