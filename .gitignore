@@ -208,9 +208,20 @@ __marimo__/
 
 # --- BrickBuilder Phase 0 data rules. Updated ---
 
-# Raw data dumps (Rebrickable, BrickLink, BrickOwl, LDraw)
-data/raw/
-data/raw/**
+# Ignore all raw and processed data dumps
+/data/raw/
+/data/processed/
+/data/canonical/
+/data/tmp/
+/data/cache/
+/tools/
+/node_modules/
+/.venv/
+
+# Keep metadata/readme markers
+!data/**/README.md
+!data/**/.keep
+
 
 # Any raw archives or CSVs you might drop in
 *.zip

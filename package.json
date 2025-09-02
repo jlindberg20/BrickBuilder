@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "fast-glob": "^3.3.3",
+    "three": "^0.179.1",
+    "three-stdlib": "^2.36.0"
+  }
+}
