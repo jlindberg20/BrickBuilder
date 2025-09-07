@@ -1,0 +1,377 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://brickbuilder.ai/schema/part_record.schema.json",
+  "title": "BrickBuilder Part Record",
+  "description": "Canonical record for a LEGO part (and related entity types) used across ingestion, enrichment, indexing, and retrieval.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["id", "type", "name", "source_ids", "category", "geometry", "stats", "metadata"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Canonical stable identifier. Current convention: 'part:rb:<rebrickable_part_num>'."
+    },
+    "type": {
+      "type": "string",
+      "enum": ["part", "minifig", "subpart", "primitive", "set", "assembly"],
+      "description": "Entity kind. Phase-0 uses 'part' for real, purchasable parts."
+    },
+    "name": {
+      "type": "string",
+      "description": "Primary display name."
+    },
+    "aliases": {
+      "type": "array",
+      "description": "Alternate names (BrickLink/BrickOwl titles, historical names, community aliases).",
+      "items": { "type": "string" }
+    },
+
+    "source_ids": {
+      "type": "object",
+      "description": "Per-marketplace identifiers.",
+      "additionalProperties": true,
+      "properties": {
+        "rb": {
+          "type": "object",
+          "properties": {
+            "part_num": { "type": "string" }
+          },
+          "required": ["part_num"],
+          "additionalProperties": true
+        },
+        "bl": {
+          "type": "object",
+          "properties": {
+            "part_num": { "type": "string" }
+          },
+          "additionalProperties": true
+        },
+        "bo": {
+          "type": "object",
+          "properties": {
+            "part_num": { "type": "string" }
+          },
+          "additionalProperties": true
+        }
+      },
+      "required": ["rb"]
+    },
+
+    "external_links": {
+      "type": "object",
+      "description": "Optional outgoing links to marketplaces and reference sites.",
+      "additionalProperties": true,
+      "properties": {
+        "rebrickable": { "type": "string" },
+        "bricklink": { "type": "string" },
+        "brickowl": { "type": "string" },
+        "brickset": { "type": "string" },
+        "peeron": { "type": "string" }
+      }
+    },
+
+    "category": {
+      "type": "object",
+      "description": "Primary category mapping.",
+      "required": ["id", "name"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "subcategories": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Optional secondary categories."
+    },
+    "themes": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Optional theme tags (e.g., Technic, Star Wars)."
+    },
+
+    "geometry": {
+      "type": "object",
+      "description": "Geometry sources, assets, and metrics.",
+      "required": ["ldraw"],
+      "properties": {
+        "ldraw": {
+          "type": "object",
+          "description": "LDraw source file and match metadata.",
+          "properties": {
+            "file": { "type": ["string", "null"] },
+            "status": { "type": ["string", "null"], "enum": ["matched", "unmatched", "partial", null] },
+            "match_reason": {
+              "type": ["string", "null"],
+              "enum": ["exact_or_alt", "parent_geometry", "base_core", "no_match", null]
+            },
+            "confidence": { "type": ["number", "null"] },
+            "source": { "type": ["string", "null"], "enum": ["official", "unofficial", null] },
+            "scale": {
+              "type": "object",
+              "description": "Scale context for LDraw (LDU to mm).",
+              "properties": {
+                "unit": { "type": "string", "enum": ["LDU", "mm"] },
+                "to_mm": { "type": "number" }
+              },
+              "additionalProperties": true
+            }
+          },
+          "additionalProperties": true
+        },
+
+        "mesh": {
+          "type": "object",
+          "description": "Back-compat single-mesh attachment (Phase-0). Prefer 'assets'.",
+          "properties": {
+            "format": { "type": "string", "enum": ["obj", "glb", "gltf"] },
+            "path": { "type": "string" },
+            "units": { "type": "string", "enum": ["mm"] },
+            "triangles": { "type": "integer", "minimum": 0 },
+            "bbox_mm": {
+              "type": "object",
+              "required": ["min", "max"],
+              "properties": {
+                "min": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+                "max": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 }
+              },
+              "additionalProperties": false
+            },
+            "hash": { "type": "string" }
+          },
+          "additionalProperties": true
+        },
+
+        "assets": {
+          "type": "array",
+          "description": "Preferred multi-asset representation (supports LODs and multiple formats).",
+          "items": {
+            "type": "object",
+            "required": ["format", "path", "units"],
+            "properties": {
+              "format": { "type": "string", "enum": ["obj", "glb", "gltf"] },
+              "path": { "type": "string" },
+              "units": { "type": "string", "enum": ["mm"] },
+              "triangles": { "type": "integer", "minimum": 0 },
+              "bbox_mm": {
+                "type": "object",
+                "required": ["min", "max"],
+                "properties": {
+                  "min": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+                  "max": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 }
+                },
+                "additionalProperties": false
+              },
+              "lod": { "type": "integer", "minimum": 0 },
+              "hash": { "type": "string" },
+              "created_at": { "type": ["integer", "string"] },
+              "updated_at": { "type": ["integer", "string"] }
+            },
+            "additionalProperties": true
+          }
+        },
+        "default_lod": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Index/level of the default asset to use for rendering."
+        },
+
+        "orientation": {
+          "type": "object",
+          "description": "Viewer/world axes convention.",
+          "properties": {
+            "up": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+            "forward": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 }
+          },
+          "additionalProperties": false
+        },
+
+        "metrics": {
+          "type": "object",
+          "description": "Derived physical metrics.",
+          "properties": {
+            "extents_mm": {
+              "type": "object",
+              "properties": {
+                "x": { "type": "number" },
+                "y": { "type": "number" },
+                "z": { "type": "number" }
+              },
+              "additionalProperties": false
+            },
+            "volume_mm3": { "type": "number" },
+            "surface_area_mm2": { "type": "number" },
+            "stud_interface": {
+              "type": "object",
+              "properties": {
+                "studs": { "type": "integer", "minimum": 0 },
+                "antistuds": { "type": "integer", "minimum": 0 },
+                "pitch_mm": { "type": "number" }
+              },
+              "additionalProperties": true
+            }
+          },
+          "additionalProperties": true
+        },
+
+        "interfaces": {
+          "type": "object",
+          "description": "Normalized connection features (axles, pins, studs, bars, clips, etc.).",
+          "additionalProperties": true
+        },
+
+        "voxel": {
+          "type": ["object", "null"],
+          "description": "Optional voxelization output."
+        }
+      },
+      "additionalProperties": true
+    },
+
+    "color_compatibility": {
+      "type": "object",
+      "description": "High-level color support summary.",
+      "properties": {
+        "count": { "type": "integer", "minimum": 0 },
+        "variants": { "type": "array", "items": {} }
+      },
+      "additionalProperties": true
+    },
+
+    "color_variants": {
+      "type": "array",
+      "description": "Detailed color/material variants across marketplaces.",
+      "items": {
+        "type": "object",
+        "required": ["market", "color_id"],
+        "properties": {
+          "market": { "type": "string", "enum": ["rb", "bl", "bo"] },
+          "color_id": { "type": "string" },
+          "lego_color_name": { "type": "string" },
+          "rgb_hex": { "type": "string", "pattern": "^#?[0-9A-Fa-f]{6}$" },
+          "material": { "type": "string" },
+          "finish": { "type": "string" },
+          "since": { "type": ["integer", "string"] },
+          "retired": { "type": ["integer", "string", "null"] },
+          "marketplace_availability": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+
+    "commerce": {
+      "type": "object",
+      "description": "Pricing, availability, rarity.",
+      "properties": {
+        "prices": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["market", "currency", "amount"],
+            "properties": {
+              "market": { "type": "string", "enum": ["rb", "bl", "bo"] },
+              "currency": { "type": "string", "minLength": 3, "maxLength": 3 },
+              "amount": { "type": "number", "minimum": 0 },
+              "updated_at": { "type": ["integer", "string"] }
+            },
+            "additionalProperties": true
+          }
+        },
+        "availability": {
+          "type": "object",
+          "description": "Per-market availability snapshot.",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "in_stock": { "type": "boolean" },
+              "sellers": { "type": "integer", "minimum": 0 },
+              "last_seen": { "type": ["integer", "string"] }
+            },
+            "additionalProperties": true
+          }
+        },
+        "rarity_score": { "type": "number", "minimum": 0, "maximum": 1 },
+        "retired": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+
+    "relationships": {
+      "type": "object",
+      "description": "Cross-part relations.",
+      "properties": {
+        "substitutes": { "type": "array", "items": { "type": "string" } },
+        "successors": { "type": "array", "items": { "type": "string" } },
+        "predecessors": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    },
+
+    "components": {
+      "type": "array",
+      "description": "For assemblies/minifigs: constituent parts and quantities.",
+      "items": {
+        "type": "object",
+        "required": ["id", "qty"],
+        "properties": {
+          "id": { "type": "string" },
+          "qty": { "type": "number", "minimum": 0 }
+        },
+        "additionalProperties": true
+      }
+    },
+
+    "stats": {
+      "type": "object",
+      "description": "Usage statistics and analytic fields.",
+      "properties": {
+        "set_usage_count": { "type": "integer", "minimum": 0 },
+        "color_count": { "type": "integer", "minimum": 0 },
+        "element_count": { "type": "integer", "minimum": 0 },
+        "appearance_in_sets": { "type": "integer", "minimum": 0 },
+        "weight_g": { "type": "number", "minimum": 0 },
+        "popularity_rank": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": true
+    },
+
+    "metadata": {
+      "type": "object",
+      "description": "Timestamps, provenance, validation state.",
+      "required": ["created_at", "updated_at"],
+      "properties": {
+        "created_at": { "type": ["integer", "string"] },
+        "updated_at": { "type": ["integer", "string"] },
+        "provenance": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["source", "fetched_at"],
+            "properties": {
+              "source": { "type": "string" },
+              "version": { "type": ["string", "number"] },
+              "fetched_at": { "type": ["integer", "string"] }
+            },
+            "additionalProperties": true
+          }
+        },
+        "validation": {
+          "type": "object",
+          "properties": {
+            "schema_version": { "type": ["string", "number"] },
+            "checks": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}
