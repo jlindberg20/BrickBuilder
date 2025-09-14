@@ -1,5 +1,8 @@
 pandas
-pyarrow     # for Parquet export
+pyarrow
 python-dotenv
 requests
 tqdm
+numpy
+trimesh
+openai
