@@ -1,249 +1,311 @@
 ﻿# phase0_backend/scripts/build_crosswalk_bo.py
-from __future__ import annotations
-import argparse, json, csv, time, os, re
+"""
+Build a unified crosswalk from the enriched Rebrickable parts file.
+
+Inputs
+------
+- data/processed/rebrickable/parts_with_ext.jsonl  (produced by enrich_rb_external_ids.py)
+
+Outputs
+-------
+- data/processed/crosswalk/unified_crosswalk.csv
+- data/processed/crosswalk/unified_crosswalk.jsonl
+- data/processed/crosswalk/unified_crosswalk.stats.json
+- data/processed/crosswalk/unified_crosswalk.log  (run log with errors/warnings)
+
+Notes
+-----
+- Default behavior filters to parts that have a mesh (--only-with-mesh on by default).
+- Progress is shown via tqdm.
+- No external APIs are called.
+"""
+
+import argparse
+import csv
+import json
+import logging
 from pathlib import Path
-from typing import Dict, Iterable, Optional, Tuple, Set, List
+from typing import Dict, Any, Iterable, List, Tuple, Optional
+from tqdm import tqdm
 
-from dotenv import load_dotenv
-load_dotenv()
+# ---------- Utilities ----------
 
-try:
-    from tqdm import tqdm
-except Exception:
-    tqdm = None
-
-from phase0_backend.marketplace.brickowl_client import BrickOwlClient, BrickOwlError
-
-RE_DESIGN = re.compile(r"^[0-9A-Za-z]+$")          # 3001, 3023, 6558c01
-RE_LDRAW  = re.compile(r"^[0-9A-Za-z_\-\.]+$")     # 3001.dat, x123c01, s\*.dat, etc.
-RE_BL     = re.compile(r"^[0-9A-Za-z\-]+$")        # 3001, 6558c01, u1234-*
-
-CANDIDATE_PATHS = {
-    "design": [
-        ["source_ids","rb","part_num"],
-        ["rb","part_num"],
-        ["rebrickable","part_num"],
-        ["part_num"],
-        ["design_id"],
-        ["ids","rebrickable","part_num"],
-    ],
-    "ldraw": [
-        ["source_ids","ldraw","part_id"],
-        ["source_ids","ldraw","ids"],
-        ["ldraw_id"],
-        ["ldraw","id"],
-        ["ldraw","ids"],
-        ["ids","ldraw","part_id"],
-    ],
-    "bricklink": [
-        ["source_ids","bl","part_num"],
-        ["bricklink","part_num"],
-        ["bl","part_num"],
-        ["ids","bricklink","part_num"],
-    ],
-}
-
-def dig(d, path):
-    cur = d
-    for k in path:
-        if not isinstance(cur, dict) or k not in cur: return None
-        cur = cur[k]
-    return cur
-
-def norm(v):
-    if v is None: return None
-    if isinstance(v, (int,)): return str(v)
-    if isinstance(v, str): return v.strip()
-    if isinstance(v, (list, tuple)):
-        out = []
-        for x in v:
-            sx = norm(x)
-            if sx: out.append(sx)
-        return out
-    return None
-
-def collect_ids(rec: Dict) -> Dict[str, List[Tuple[str, str]]]:
-    """
-    Returns dict: kind -> list of (value, source_hint)
-    kind ∈ {"design","ldraw","bricklink"}
-    """
-    out = {"design":[], "ldraw":[], "bricklink":[]}
-    for kind, paths in CANDIDATE_PATHS.items():
-        for path in paths:
-            v = norm(dig(rec, path))
-            if not v: continue
-            if isinstance(v, list):
-                vals = v
-            else:
-                vals = [v]
-            for val in vals:
-                if kind == "design" and RE_DESIGN.match(val) and not re.match(r"^0{2,}\d+$", val):
-                    out["design"].append((val, ".".join(path)))
-                elif kind == "ldraw" and RE_LDRAW.match(val):
-                    out["ldraw"].append((val, ".".join(path)))
-                elif kind == "bricklink" and RE_BL.match(val):
-                    out["bricklink"].append((val, ".".join(path)))
-    return out
-
-def iter_rb_parts(jsonl_path: Path, limit: Optional[int]) -> Iterable[Dict]:
-    n = 0
-    with jsonl_path.open("r", encoding="utf-8") as f:
+def read_jsonl(path: Path) -> Iterable[Dict[str, Any]]:
+    with path.open("r", encoding="utf-8") as f:
         for line in f:
-            if not line.strip(): continue
-            rec = json.loads(line)
-            if rec.get("type") != "part": continue
-            ids = collect_ids(rec)
-            if not any(ids.values()):  # nothing usable
+            line = line.strip()
+            if not line:
                 continue
-            name = rec.get("name") or ""
-            yield {"name": name, "ids": ids}
-            n += 1
-            if limit and n >= limit: break
+            try:
+                yield json.loads(line)
+            except Exception as e:
+                logging.exception("Failed to parse JSON line")
+                continue
 
-def load_checkpoint(checkpoint_path: Path) -> Set[str]:
-    done: Set[str] = set()
-    if checkpoint_path.exists():
-        with checkpoint_path.open("r", encoding="utf-8") as f:
-            for line in f:
-                p = line.strip()
-                if p: done.add(p)
-    return done
+def to_list(x):
+    if x is None:
+        return []
+    if isinstance(x, list):
+        return x
+    return [x]
 
-def append_checkpoint(checkpoint_path: Path, key: str) -> None:
-    with checkpoint_path.open("a", encoding="utf-8") as f:
-        f.write(key + "\n")
+def norm_str(x: Optional[str]) -> Optional[str]:
+    if x is None:
+        return None
+    s = str(x).strip()
+    return s or None
 
-def open_output_writer(out_csv: Path):
-    is_new = not out_csv.exists()
-    f = out_csv.open("a", encoding="utf-8", newline="")
-    w = csv.DictWriter(f, fieldnames=["rb_part_num","rb_name","bo_part_num","source","confidence","error","source_hint"])
-    if is_new: w.writeheader()
-    return w, f
+def best_str(items: List[str]) -> Optional[str]:
+    items = [i for i in items if i]
+    if not items:
+        return None
+    # Prefer the shortest token; for prints/variants this tends to pick the base id
+    items_sorted = sorted(items, key=lambda s: (len(s), s))
+    return items_sorted[0]
 
-def rate_gate(last_time: list, rpm: float):
-    min_interval = 60.0 / max(1.0, rpm)
-    now = time.time()
-    if last_time[0] is not None:
-        elapsed = now - last_time[0]
-        if elapsed < min_interval: time.sleep(min_interval - elapsed)
-    last_time[0] = time.time()
+def build_row(rec: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    # Core RB fields
+    rb_num = norm_str(((rec.get("source_ids") or {}).get("rb") or {}).get("part_num"))
+    name = norm_str(rec.get("name"))
+    ptype = norm_str(rec.get("type"))
+    category = (rec.get("category") or {}).get("name")
+    ext_links = rec.get("external_links") or {}
+    rb_url = ext_links.get("rebrickable") if isinstance(ext_links, dict) else None
+
+    enr = rec.get("rebrickable_enrichment") or {}
+    rb_hit = norm_str(enr.get("rb_search_part_num"))
+    ext = enr.get("external_ids") or {}
+
+    # External IDs (lists)
+    bl_ids      = [norm_str(x) for x in to_list(ext.get("BrickLink")) if norm_str(x)]
+    bo_ids      = [norm_str(x) for x in to_list(ext.get("BrickOwl")) if norm_str(x)]
+    ldraw_ids   = [norm_str(x) for x in to_list(ext.get("LDraw")) if norm_str(x)]
+    lego_ids    = [norm_str(x) for x in to_list(ext.get("LEGO")) if norm_str(x)]
+    brickset_ids= [norm_str(x) for x in to_list(ext.get("Brickset")) if norm_str(x)]
+
+    exact_rb_match = (rb_num is not None and rb_hit is not None and rb_num.lower() == rb_hit.lower())
+
+    # Representative singletons for CSV readability
+    bl_primary   = best_str(bl_ids)
+    bo_primary   = best_str(bo_ids)
+    ldraw_primary= best_str(ldraw_ids)
+    lego_primary = best_str(lego_ids)
+
+    # Friendly URLs where possible (skip if missing)
+    bl_url = f"https://www.bricklink.com/v2/catalog/catalogitem.page?P={bl_primary}" if bl_primary else None
+    bo_url = f"https://www.brickowl.com/catalog/{bo_primary}" if bo_primary else None
+    ldraw_url = f"https://library.ldraw.org/parts/{ldraw_primary}" if ldraw_primary and ldraw_primary.endswith(".dat") else None
+
+    geometry = rec.get("geometry") or {}
+    has_mesh = bool(geometry.get("mesh"))
+
+    csv_row = {
+        "rb_part_num": rb_num,
+        "rb_name": name,
+        "rb_type": ptype,
+        "rb_category": category,
+        "rb_url": rb_url or "",
+
+        "bl_ids": ";".join(bl_ids) if bl_ids else "",
+        "bo_ids": ";".join(bo_ids) if bo_ids else "",
+        "ldraw_ids": ";".join(ldraw_ids) if ldraw_ids else "",
+        "lego_ids": ";".join(lego_ids) if lego_ids else "",
+        "brickset_ids": ";".join(brickset_ids) if brickset_ids else "",
+
+        "bl_primary": bl_primary or "",
+        "bo_primary": bo_primary or "",
+        "ldraw_primary": ldraw_primary or "",
+        "lego_primary": lego_primary or "",
+
+        "bl_url": bl_url or "",
+        "bo_url": bo_url or "",
+        "ldraw_url": ldraw_url or "",
+
+        "rb_exact_match": "1" if exact_rb_match else "0",
+        "has_mesh": "1" if has_mesh else "0",
+    }
+
+    jsonl_row = {
+        "rb": {
+            "part_num": rb_num,
+            "name": name,
+            "type": ptype,
+            "category": category,
+            "url": rb_url,
+        },
+        "external_ids": {
+            "BrickLink": bl_ids or None,
+            "BrickOwl": bo_ids or None,
+            "LDraw": ldraw_ids or None,
+            "LEGO": lego_ids or None,
+            "Brickset": brickset_ids or None,
+        },
+        "primary": {
+            "bl": bl_primary,
+            "bo": bo_primary,
+            "ldraw": ldraw_primary,
+            "lego": lego_primary,
+        },
+        "urls": {
+            "bricklink": bl_url,
+            "brickowl": bo_url,
+            "ldraw": ldraw_url,
+            "rebrickable": rb_url,
+        },
+        "quality": {
+            "rb_exact_match": exact_rb_match,
+        },
+        "flags": {
+            "has_mesh": has_mesh,
+        }
+    }
+    return csv_row, jsonl_row
+
+# ---------- Main ----------
 
 def main():
-    ap = argparse.ArgumentParser(description="RB↔BrickOwl crosswalk (BOID-only, multi-ID, resumable).")
-    ap.add_argument("--rb-jsonl", required=True)
-    ap.add_argument("--out-csv", required=True)
-    ap.add_argument("--out-json", required=True)
-    ap.add_argument("--limit", type=int, default=None)
-    ap.add_argument("--mode", choices=["live","dry"], default="live")
-    ap.add_argument("--checkpoint", default="data/processed/crosswalk/rb_bo_checkpoint.txt")
-    ap.add_argument("--rpm", type=float, default=150.0)
-    ap.add_argument("--flush-every", type=int, default=200)
+    ap = argparse.ArgumentParser(description="Build unified crosswalk from enriched RB parts.")
+    ap.add_argument("--in-jsonl", default="data/processed/rebrickable/parts_with_ext.jsonl",
+                    help="Input enriched JSONL (default: data/processed/rebrickable/parts_with_ext.jsonl)")
+    ap.add_argument("--out-csv", default="data/processed/crosswalk/unified_crosswalk.csv",
+                    help="Output CSV path")
+    ap.add_argument("--out-jsonl", default="data/processed/crosswalk/unified_crosswalk.jsonl",
+                    help="Output JSONL path")
+    ap.add_argument("--out-stats", default="data/processed/crosswalk/unified_crosswalk.stats.json",
+                    help="Stats JSON path")
+    ap.add_argument("--log-file", default="data/processed/crosswalk/unified_crosswalk.log",
+                    help="Run log file path")
+    ap.add_argument("--only-with-mesh", action="store_true", default=True,
+                    help="Process only parts that have a mesh (DEFAULT: on)")
+    ap.add_argument("--include-non-mesh", action="store_true",
+                    help="Include parts without mesh (overrides --only-with-mesh)")
     args = ap.parse_args()
 
-    rb_path = Path(args.rb_jsonl)
-    out_csv = Path(args.out_csv); out_csv.parent.mkdir(parents=True, exist_ok=True)
-    out_json = Path(args.out_json); out_json.parent.mkdir(parents=True, exist_ok=True)
-    checkpoint_path = Path(args.checkpoint); checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
+    # Effective mesh filter flag
+    only_with_mesh = False if args.include_non_mesh else True
 
-    # Build working set once so progress/ETA is accurate
-    usable = list(iter_rb_parts(rb_path, args.limit))
-    total_est = len(usable)
+    in_path   = Path(args.in_jsonl)
+    out_csv   = Path(args.out_csv)
+    out_jsonl = Path(args.out_jsonl)
+    out_stats = Path(args.out_stats)
+    log_file  = Path(args.log_file)
 
-    already_done = load_checkpoint(checkpoint_path)
-    writer, fh = open_output_writer(out_csv)
+    out_csv.parent.mkdir(parents=True, exist_ok=True)
+    out_jsonl.parent.mkdir(parents=True, exist_ok=True)
+    out_stats.parent.mkdir(parents=True, exist_ok=True)
+    log_file.parent.mkdir(parents=True, exist_ok=True)
 
-    bo = BrickOwlClient() if args.mode == "live" else None
-    last_time = [None]
-    processed = mapped = errors = 0
-    buffer_since_flush = 0
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(message)s",
+        handlers=[logging.FileHandler(log_file, encoding="utf-8"), logging.StreamHandler()]
+    )
+    logging.info("Starting unified crosswalk build")
+    logging.info("Input: %s", in_path)
 
-    iterable = usable
-    if tqdm: iterable = tqdm(usable, total=total_est, unit="part", smoothing=0.1, dynamic_ncols=True)
-
-    def process_one(name: str, ids: Dict[str, List[Tuple[str,str]]]):
-        # We’ll key the checkpoint by a stable string signature: first usable ID found in our order.
-        order = ["design","bricklink","ldraw"]
-        # Try in this order
-        for kind in order:
-            for value, hint in ids.get(kind, []):
-                try:
-                    rate_gate(last_time, args.rpm)
-                    if kind == "design":
-                        boid = bo.resolve_boid(value)
-                        if boid: return value, hint, boid, "api", 1.0, None
-                    elif kind == "bricklink":
-                        # we don't have a direct resolve for BL in the BO client, but id_lookup can use the id_type
-                        from phase0_backend.marketplace.brickowl_client import _bo_get
-                        data = _bo_get("catalog/id_lookup", {"id": value, "type": "Part", "id_type": "bricklink_id"})
-                        raw = data.get("boids") or []
-                        if raw:
-                            boid = raw[0] if isinstance(raw[0], str) else (raw[0].get("boid") if isinstance(raw[0], dict) else None)
-                            if boid:
-                                if isinstance(boid, str) and "-" in boid:
-                                    boid = boid.split("-",1)[0]
-                                return value, hint, boid, "api", 1.0, None
-                    elif kind == "ldraw":
-                        from phase0_backend.marketplace.brickowl_client import _bo_get
-                        data = _bo_get("catalog/id_lookup", {"id": value, "type": "Part", "id_type": "ldraw_id"})
-                        raw = data.get("boids") or []
-                        if raw:
-                            boid = raw[0] if isinstance(raw[0], str) else (raw[0].get("boid") if isinstance(raw[0], dict) else None)
-                            if boid:
-                                if isinstance(boid, str) and "-" in boid:
-                                    boid = boid.split("-",1)[0]
-                                return value, hint, boid, "api", 1.0, None
-                except BrickOwlError as e:
-                    # Permission/shape errors; continue trying other ids
-                    return value, hint, None, None, None, str(e)[:300]
-                except Exception as e:
-                    return value, hint, None, None, None, f"unexpected:{e!r}"[:300]
-        return None, None, None, None, None, None
-
+    # Count for progress bar
     try:
-        for rec in iterable:
-            name = rec["name"]; ids = rec["ids"]
+        total_records = sum(1 for _ in read_jsonl(in_path))
+    except FileNotFoundError:
+        logging.error("Input not found: %s", in_path)
+        print(json.dumps({"ok": False, "error": f"Input not found: {in_path}"}))
+        return
 
-            # choose a stable checkpoint key: prefer the first design id, else first BL, else first LDraw
-            key = (ids.get("design") or ids.get("bricklink") or ids.get("ldraw") or [("NA","")])[0][0]
-            if key in already_done:
-                processed += 1
-                if tqdm: iterable.set_postfix_str(f"skipped={len(already_done)} mapped={mapped} err={errors}")
+    written = 0
+    with_ids = 0
+    exact = 0
+    with_mesh_count = 0
+    sample_mismatches = []
+
+    fieldnames = [
+        "rb_part_num","rb_name","rb_type","rb_category","rb_url",
+        "bl_ids","bo_ids","ldraw_ids","lego_ids","brickset_ids",
+        "bl_primary","bo_primary","ldraw_primary","lego_primary",
+        "bl_url","bo_url","ldraw_url",
+        "rb_exact_match","has_mesh"
+    ]
+
+    # Streaming pass with progress bar
+    with out_csv.open("w", newline="", encoding="utf-8") as fcsv, out_jsonl.open("w", encoding="utf-8") as fj:
+        writer = csv.DictWriter(fcsv, fieldnames=fieldnames)
+        writer.writeheader()
+
+        pbar = tqdm(read_jsonl(in_path), total=total_records, unit="part", desc="Unified crosswalk")
+        for rec in pbar:
+            try:
+                geometry = rec.get("geometry") or {}
+                has_mesh = bool(geometry.get("mesh"))
+                if only_with_mesh and not has_mesh:
+                    continue
+
+                csv_row, jsonl_row = build_row(rec)
+
+                any_ids = any([
+                    csv_row["bl_ids"],
+                    csv_row["bo_ids"],
+                    csv_row["ldraw_ids"],
+                    csv_row["lego_ids"],
+                    csv_row["brickset_ids"]
+                ])
+                if any_ids:
+                    with_ids += 1
+                if csv_row["rb_exact_match"] == "1":
+                    exact += 1
+                if csv_row["has_mesh"] == "1":
+                    with_mesh_count += 1
+
+                rb_num = csv_row.get("rb_part_num")
+                rb_hit = ((rec.get("rebrickable_enrichment") or {}).get("rb_search_part_num"))
+                if (rb_num and rb_hit and str(rb_num).lower() != str(rb_hit).lower()) and len(sample_mismatches) < 20:
+                    ext = ((rec.get("rebrickable_enrichment") or {}).get("external_ids") or {})
+                    sample_mismatches.append({
+                        "name": rec.get("name"),
+                        "rb_num": rb_num,
+                        "hit_num": rb_hit,
+                        "ext_keys": sorted([k for k, v in ext.items() if v])
+                    })
+
+                writer.writerow(csv_row)
+                fj.write(json.dumps(jsonl_row, ensure_ascii=False) + "\n")
+                written += 1
+
+                pbar.set_postfix(
+                    written=written,
+                    with_ids=with_ids,
+                    exact=exact,
+                    mesh=with_mesh_count
+                )
+            except Exception as e:
+                logging.exception("Failed to process record")
                 continue
 
-            rb_value, hint, boid, source, conf, err = process_one(name, ids)
-
-            writer.writerow({
-                "rb_part_num": rb_value or key,
-                "rb_name": name,
-                "bo_part_num": boid,
-                "source": source,
-                "confidence": conf,
-                "error": err,
-                "source_hint": hint,
-            })
-            append_checkpoint(checkpoint_path, key)
-
-            if boid: mapped += 1
-            if err: errors += 1
-
-            processed += 1
-            buffer_since_flush += 1
-            if tqdm: iterable.set_postfix_str(f"mapped={mapped} err={errors}")
-            if buffer_since_flush >= args.flush_every:
-                fh.flush(); os.fsync(fh.fileno()); buffer_since_flush = 0
-
-        fh.flush(); os.fsync(fh.fileno())
-    finally:
-        fh.close()
-
     stats = {
-        "total": processed,
-        "mapped": mapped,
-        "errors": errors,
-        "coverage_pct": (100.0 * mapped / processed) if processed else 0.0,
-        "rpm_used": args.rpm,
-        "checkpoint": str(checkpoint_path),
+        "input_records": total_records,
+        "written_records": written,
+        "with_any_external_ids": with_ids,
+        "with_any_external_ids_pct": round(100.0 * with_ids / written, 2) if written else 0.0,
+        "rb_exact_match_count": exact,
+        "rb_exact_match_pct": round(100.0 * exact / written, 2) if written else 0.0,
+        "with_mesh_count": with_mesh_count,
+        "with_mesh_pct": round(100.0 * with_mesh_count / written, 2) if written else 0.0,
+        "sample_mismatches": sample_mismatches,
+        "only_with_mesh": only_with_mesh,
+        "log_file": str(log_file)
     }
-    with open(out_json, "w", encoding="utf-8") as f:
-        json.dump(stats, f, indent=2)
-    print(json.dumps(stats, indent=2))
+    with out_stats.open("w", encoding="utf-8") as fs:
+        json.dump(stats, fs, indent=2)
+
+    logging.info("Finished. Wrote CSV: %s", out_csv)
+    logging.info("Finished. Wrote JSONL: %s", out_jsonl)
+    logging.info("Stats: %s", out_stats)
+    print(json.dumps({
+        "ok": True,
+        "input": str(in_path),
+        "out_csv": str(out_csv),
+        "out_jsonl": str(out_jsonl),
+        "out_stats": str(out_stats),
+        "log_file": str(log_file)
+    }, indent=2))
+
+if __name__ == "__main__":
+    main()
