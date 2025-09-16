@@ -1,4 +1,4 @@
-Folder PATH listing for volume OS
+Folder PATH listing for volume OS. dATE IS 09/15/2025
 Volume serial number is 0C80-F607
 C:.
 |   .env
@@ -59371,11 +59371,27 @@ C:.
 |   |           u977.obj
 |   |           
 |   +---processed
+|   |   +---crosswalk
+|   |   |       unified_crosswalk.log
+|   |   |       unified_crosswalk_fixups.csv
+|   |   |       unified_crosswalk_mesh.csv
+|   |   |       unified_crosswalk_mesh.fixed.csv
+|   |   |       unified_crosswalk_mesh.jsonl
+|   |   |       unified_crosswalk_mesh.stats.json
+|   |   |       
+|   |   +---master
+|   |   |       master_parts.20250915_1920.jsonl
+|   |   |       master_parts.jsonl
+|   |   |       master_parts.stats.20250915_1920.json
+|   |   |       master_parts.stats.json
+|   |   |       master_sample_bo_bl_mesh.csv
+|   |   |       
 |   |   \---rebrickable
 |   |       |   mesh_coverage_summary.json
 |   |       |   mesh_missing_reasonB.csv
 |   |       |   parts_preview.csv
 |   |       |   parts_unified.jsonl
+|   |       |   parts_with_ext.jsonl
 |   |       |   parts_with_ldraw.jsonl
 |   |       |   parts_with_mesh_mm.jsonl
 |   |       |   parts_with_mesh_small.jsonl
@@ -97512,10 +97528,13 @@ C:.
 |   |       seed_data.sql
 |   |       
 |   +---marketplace
-|   |       bricklink_client.py
-|   |       brickowl_client.py
-|   |       rebrickable_client.py
-|   |       
+|   |   |   bricklink_client.py
+|   |   |   brickowl_client.py
+|   |   |   rebrickable_client.py
+|   |   |   
+|   |   \---__pycache__
+|   |           brickowl_client.cpython-313.pyc
+|   |           
 |   +---parsers
 |   |       color_parser.py
 |   |       ldraw_parser.py
@@ -97523,24 +97542,38 @@ C:.
 |   |       rebrickable_parser.py
 |   |       
 |   +---scripts
-|   |       attach_ldraw_matches.py
-|   |       attach_mesh_from_manifest_mm.py
-|   |       attach_mesh_from_manifest_small.py
-|   |       build_embeddings.py
-|   |       build_ldraw_index.py
-|   |       build_obj_mm_manifest.py
-|   |       export_glb_small.py
-|   |       export_mesh_small.py
-|   |       ldraw_expand.py
-|   |       prepare_vector_index_inputs.py
-|   |       probe_first_matched.py
-|   |       qc_mesh_coverage.py
-|   |       query_semantic.py
-|   |       reb_build_parts.py
-|   |       reb_qc_parts.py
-|   |       validate_parts_jsonl.py
-|   |       __init__.py
-|   |       
+|   |   |   attach_ldraw_matches.py
+|   |   |   attach_mesh_from_manifest_mm.py
+|   |   |   attach_mesh_from_manifest_small.py
+|   |   |   build_crosswalk_bo.py
+|   |   |   build_embeddings.py
+|   |   |   build_ldraw_index.py
+|   |   |   build_obj_mm_manifest.py
+|   |   |   debug_ids_in_rb.py
+|   |   |   debug_rb_schema.py
+|   |   |   enrich_rb_external_ids.py
+|   |   |   export_glb_small.py
+|   |   |   export_mesh_small.py
+|   |   |   fuse_crosswalk_to_master.py
+|   |   |   ldraw_expand.py
+|   |   |   merge_marketplaces_bo.py
+|   |   |   prepare_vector_index_inputs.py
+|   |   |   probe_first_matched.py
+|   |   |   qc_mesh_coverage.py
+|   |   |   query_semantic.py
+|   |   |   reb_build_parts.py
+|   |   |   reb_qc_parts.py
+|   |   |   validate_parts_jsonl.py
+|   |   |   __init__.py
+|   |   |   
+|   |   \---__pycache__
+|   |           build_crosswalk_bo.cpython-313.pyc
+|   |           debug_ids_in_rb.cpython-313.pyc
+|   |           debug_rb_schema.cpython-313.pyc
+|   |           enrich_rb_external_ids.cpython-313.pyc
+|   |           fuse_crosswalk_to_master.cpython-313.pyc
+|   |           __init__.cpython-313.pyc
+|   |           
 |   +---services
 |   |       mesh_generator.py
 |   |       part_vectorizer.py
@@ -97549,10 +97582,16 @@ C:.
 |   +---tests
 |   |       test_parsers.py
 |   |       
+|   +---utils
+|   |       normalization.py
+|   |       __init__.py
+|   |       
 |   \---__pycache__
 |           __init__.cpython-313.pyc
 |           
 \---tools
+    |   run_crosswalk_bo.py
+    |   
     \---node-ldraw
         |   convert_ldraw_to_glb.mjs
         |   package-lock.json
