@@ -1,4 +1,4 @@
-Folder PATH listing for volume OS. dATE IS 09/17/2025
+Folder PATH listing for volume OS. DATE ===> 09/17/2025
 Volume serial number is 0C80-F607
 C:.
 |   .env
