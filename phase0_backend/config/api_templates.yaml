@@ -1,12 +1,36 @@
 ﻿templates:
-  bo:part_prices:1:
+  bo:catalog_availability:1:
     method: GET
-    url: "https://api.brickowl.com/v1/parts/{part_id}/prices"
+    url: "https://api.brickowl.com/v1/catalog/availability"
     params:
-      required: ["part_id"]
-      optional: ["condition","currency"]
+      required: ["boid"]
+      optional: ["quantity","country"]
     auth:
       type: api_key
-      location: query   # key sent as query string
-      name: "key"       # ?key=<YOUR_KEY>
-    ttl_seconds: 86400  # 1 day cache TTL recommendation
+      location: query
+      name: "key"
+    ttl_seconds: 86400
+
+  bo:catalog_inventory:1:
+    method: GET
+    url: "https://api.brickowl.com/v1/catalog/inventory"
+    params:
+      required: ["boid"]
+      optional: []
+    auth:
+      type: api_key
+      location: query
+      name: "key"
+    ttl_seconds: 3600
+
+  bo:catalog_lookup:1:
+    method: GET
+    url: "https://api.brickowl.com/v1/catalog/lookup"
+    params:
+      required: ["boid"]
+      optional: []
+    auth:
+      type: api_key
+      location: query
+      name: "key"
+    ttl_seconds: 604800
