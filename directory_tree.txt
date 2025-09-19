@@ -1,4 +1,4 @@
-Folder PATH listing for volume OS. DATE ==> 09/17/2025
+Folder PATH listing for volume OS
 Volume serial number is 0C80-F607
 C:.
 |   .env
@@ -59381,27 +59381,37 @@ C:.
 |   |   |       
 |   |   +---master
 |   |   |       master_parts.20250915_1920.jsonl
+|   |   |       master_parts.enriched.jsonl
 |   |   |       master_parts.jsonl
 |   |   |       master_parts.stats.20250915_1920.json
 |   |   |       master_parts.stats.json
 |   |   |       master_sample_bo_bl_mesh.csv
 |   |   |       
-|   |   \---rebrickable
-|   |       |   mesh_coverage_summary.json
-|   |       |   mesh_missing_reasonB.csv
-|   |       |   parts_preview.csv
-|   |       |   parts_unified.jsonl
-|   |       |   parts_with_ext.jsonl
-|   |       |   parts_with_ldraw.jsonl
-|   |       |   parts_with_mesh_mm.jsonl
-|   |       |   parts_with_mesh_small.jsonl
-|   |       |   _manifest.json
-|   |       |   
-|   |       \---validation
-|   |               parts_with_mesh_mm.failures.csv
-|   |               parts_with_mesh_mm.sample_pass.jsonl
-|   |               parts_with_mesh_mm.validation_summary.json
-|   |               
+|   |   +---rebrickable
+|   |   |   |   mesh_coverage_summary.json
+|   |   |   |   mesh_missing_reasonB.csv
+|   |   |   |   parts_preview.csv
+|   |   |   |   parts_unified.jsonl
+|   |   |   |   parts_with_ext.jsonl
+|   |   |   |   parts_with_ldraw.jsonl
+|   |   |   |   parts_with_mesh_mm.jsonl
+|   |   |   |   parts_with_mesh_small.jsonl
+|   |   |   |   _manifest.json
+|   |   |   |   
+|   |   |   \---validation
+|   |   |           parts_with_mesh_mm.failures.csv
+|   |   |           parts_with_mesh_mm.sample_pass.jsonl
+|   |   |           parts_with_mesh_mm.validation_summary.json
+|   |   |           
+|   |   \---reports
+|   |           commerce_coverage.slice.json
+|   |           master_parts.enriched.failures.csv
+|   |           master_parts.enriched.sample_pass.jsonl
+|   |           master_parts.enriched.validation_summary.json
+|   |           master_parts.failures.csv
+|   |           master_parts.sample_pass.jsonl
+|   |           master_parts.validation_summary.json
+|   |           
 |   \---raw
 |       +---ldraw
 |       |   |   CAlicense.txt
@@ -97523,6 +97533,9 @@ C:.
 |   +---api
 |   |       ingest_api.py
 |   |       
+|   +---config
+|   |       api_templates.yaml
+|   |       
 |   +---db
 |   |       schema.sql
 |   |       seed_data.sql
@@ -97531,9 +97544,11 @@ C:.
 |   |   |   bricklink_client.py
 |   |   |   brickowl_client.py
 |   |   |   rebrickable_client.py
+|   |   |   util.py
 |   |   |   
 |   |   \---__pycache__
 |   |           brickowl_client.cpython-313.pyc
+|   |           util.cpython-313.pyc
 |   |           
 |   +---parsers
 |   |       color_parser.py
@@ -97549,8 +97564,10 @@ C:.
 |   |   |   build_embeddings.py
 |   |   |   build_ldraw_index.py
 |   |   |   build_obj_mm_manifest.py
+|   |   |   coverage_commerce.py
 |   |   |   debug_ids_in_rb.py
 |   |   |   debug_rb_schema.py
+|   |   |   enrich_commerce.py
 |   |   |   enrich_rb_external_ids.py
 |   |   |   export_glb_small.py
 |   |   |   export_mesh_small.py
@@ -97563,6 +97580,7 @@ C:.
 |   |   |   query_semantic.py
 |   |   |   reb_build_parts.py
 |   |   |   reb_qc_parts.py
+|   |   |   smoketest_brickowl.py
 |   |   |   validate_parts_jsonl.py
 |   |   |   __init__.py
 |   |   |   
