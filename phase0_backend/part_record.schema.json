@@ -300,15 +300,32 @@
       "additionalProperties": true
     },
 
-    "relationships": {
-      "type": "object",
-      "description": "Cross-part relations.",
-      "properties": {
-        "substitutes": { "type": "array", "items": { "type": "string" } },
-        "successors": { "type": "array", "items": { "type": "string" } },
-        "predecessors": { "type": "array", "items": { "type": "string" } }
-      },
-      "additionalProperties": true
+   "relationships": {
+      "oneOf": [
+        {
+          "type": "object",
+          "description": "Cross-part relations (object form).",
+          "properties": {
+            "substitutes": { "type": "array", "items": { "type": "string" } },
+            "successors":  { "type": "array", "items": { "type": "string" } },
+            "predecessors":{ "type": "array", "items": { "type": "string" } }
+          },
+          "additionalProperties": true
+        },
+        {
+          "type": "array",
+          "description": "Cross-part relations (array form: items with rel_type/parent/child).",
+          "items": {
+            "type": "object",
+            "properties": {
+              "rel_type": { "type": "string" },
+              "parent":   { "type": "string" },
+              "child":    { "type": "string" }
+            },
+            "additionalProperties": true
+          }
+        }
+      ]
     },
 
     "components": {
