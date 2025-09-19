@@ -1,0 +1,12 @@
+﻿templates:
+  bo:part_prices:1:
+    method: GET
+    url: "https://api.brickowl.com/v1/parts/{part_id}/prices"
+    params:
+      required: ["part_id"]
+      optional: ["condition","currency"]
+    auth:
+      type: api_key
+      location: query   # key sent as query string
+      name: "key"       # ?key=<YOUR_KEY>
+    ttl_seconds: 86400  # 1 day cache TTL recommendation
