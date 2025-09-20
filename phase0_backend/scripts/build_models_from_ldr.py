@@ -8,6 +8,15 @@ from phase0_backend.parsers.ldraw_resolver import load_ldraw_to_rb_map, resolve_
 from phase0_backend.parsers.ldraw_colors import load_ldraw_colors
 from phase0_backend.parsers.rebrickable_colors import load_rebrickable_colors
 
+# For bbox
+from phase0_backend.scripts.ldraw_expand import (
+    LDrawIndex,
+    LDrawExpander,
+    triangle_bounds,
+    LDRAW_ROOT,
+    LDRAW_INDEX_JSON,
+)
+
 LDU_TO_MM = 0.4
 
 def _drop_none(d: dict) -> dict:
@@ -19,10 +28,7 @@ def _hex_to_rgb_tuple(h: str):
     return (int(h[0:2],16), int(h[2:4],16), int(h[4:6],16))
 
 def _nearest_rb_color(hexv: str, rbcolors_dict: dict, max_delta: float = 30.0):
-    """
-    rbcolors_dict: { '#RRGGBB': {'rb_color_id': '...', 'name': '...'}, ... }
-    Returns {'rb_color_id': str, 'name': str} or None if nearest is too far (delta > max_delta).
-    """
+    """Return {'rb_color_id': str, 'name': str} if nearest within max_delta in RGB space; else None."""
     try:
         r0,g0,b0 = _hex_to_rgb_tuple(hexv)
     except Exception:
@@ -55,7 +61,6 @@ def _enrich_with_rb_and_colors(res, rbmap, ldraw_colors, rbcolors):
 
     # Aggregate BOM
     bom_counts = {}
-    color_lookup = {}
     for st in steps:
         for pl in st["placements"]:
             rb = pl.get("rb_part_num") or infer_ldraw_stem(pl.get("subfile",""))
@@ -63,7 +68,6 @@ def _enrich_with_rb_and_colors(res, rbmap, ldraw_colors, rbcolors):
             lcd = pl.get("ldraw_color")
             key = (rb, lcd)
             bom_counts[key] = bom_counts.get(key, 0) + pl.get("qty", 1)
-            color_lookup[key] = lcd
 
     # Build BOM rows with hex + rb_color_id (exact match first, else nearest)
     bom = []
@@ -73,11 +77,9 @@ def _enrich_with_rb_and_colors(res, rbmap, ldraw_colors, rbcolors):
             hexv = (ldraw_colors.get(lcd) or {}).get("hex")
             if hexv:
                 item["color_rgb_hex"] = hexv
-                # exact match
-                rbcolor = rbcolors.get(hexv)
+                rbcolor = load_rebrickable_colors.cache.get(hexv)  # filled in main()
                 if not rbcolor:
-                    # nearest fallback within a reasonable delta
-                    rbcolor = _nearest_rb_color(hexv, rbcolors, max_delta=30.0)
+                    rbcolor = _nearest_rb_color(hexv, load_rebrickable_colors.cache, max_delta=30.0)
                 if rbcolor:
                     item["rb_color_id"] = rbcolor["rb_color_id"]
         bom.append(item)
@@ -85,9 +87,47 @@ def _enrich_with_rb_and_colors(res, rbmap, ldraw_colors, rbcolors):
     res["bom"] = bom
     return res
 
+def _compute_bbox_mm_or_none(ldr_model_file: str):
+    """
+    Compute full-assembly bbox in mm using your ldraw_expand module:
+      - LDrawIndex expects a JSON index file (LDRAW_INDEX_JSON)
+      - LDrawExpander requires the ldraw root folder and the index
+      - triangle_bounds returns (min_ldu, max_ldu) — convert to mm with 0.4
+    """
+    try:
+        # Resolve constants to absolute paths
+        idx_path = Path(LDRAW_INDEX_JSON)
+        if not idx_path.is_absolute():
+            idx_path = (Path.cwd() / idx_path).resolve()
+        root_path = Path(LDRAW_ROOT)
+        if not root_path.is_absolute():
+            root_path = (Path.cwd() / root_path).resolve()
+
+        # Build index and expander
+        index = LDrawIndex(idx_path)
+        expander = LDrawExpander(root_path, index)
+
+        top_abs = str(Path(ldr_model_file).resolve())
+        tris = expander.expand_to_triangles(top_abs)
+        if tris is None or getattr(tris, "size", 0) == 0 or len(tris) == 0:
+            return None
+
+        mn_ldu, mx_ldu = triangle_bounds(tris)
+        # Convert numpy arrays to plain floats
+        mn = [float(mn_ldu[0]), float(mn_ldu[1]), float(mn_ldu[2])]
+        mx = [float(mx_ldu[0]), float(mx_ldu[1]), float(mx_ldu[2])]
+
+        min_mm = [round(v * LDU_TO_MM, 3) for v in mn]
+        max_mm = [round(v * LDU_TO_MM, 3) for v in mx]
+        return {"min": min_mm, "max": max_mm}
+    except Exception as e:
+        print(f"[bbox] Skipping (error: {e})")
+        return None
+
 def build_record(ldr_path: str, parsed, master_parts_version: str | None = None, final_bbox_mm=None):
     stem = infer_ldraw_stem(ldr_path)
 
+    # Placements → schema-compliant
     steps = parsed["steps"]
     if steps is not None:
         out_steps = []
@@ -122,7 +162,7 @@ def build_record(ldr_path: str, parsed, master_parts_version: str | None = None,
         "bom": parsed["bom"],
         "steps": out_steps,
         "instructions": { "kind": "ldraw", "source": ldr_path, "parsed_confidence": 1.0 if out_steps else 0.5 },
-        "links": { "master_parts_version": master_parts_version or "", "parser_version": "ldraw_parser_v0.7", "build_tools": "python" }
+        "links": { "master_parts_version": master_parts_version or "", "parser_version": "ldraw_parser_v0.8", "build_tools": "python" }
     }
 
     if final_bbox_mm:
@@ -134,14 +174,16 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--files", nargs="+", required=True)
     ap.add_argument("--crosswalk", default="data/processed/crosswalk/unified_crosswalk_mesh.jsonl")
-    ap.add_argument("--ldraw-root", default="data/raw/ldraw")
+    ap.add_argument("--ldraw-root", default="data/raw/ldraw")  # retained for color table; bbox uses constants
     ap.add_argument("--bbox", action="store_true")
     ap.add_argument("--out", default="data/processed/models/master_models.jsonl")
     args = ap.parse_args()
 
+    # Preload color tables
     rbmap = load_ldraw_to_rb_map(args.crosswalk)
     ldraw_colors = load_ldraw_colors(args.ldraw_root)
-    rbcolors = load_rebrickable_colors()
+    # Cache pattern to avoid recomputing nearest matches repeatedly
+    load_rebrickable_colors.cache = load_rebrickable_colors()
 
     out_path = Path(args.out)
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -150,96 +192,17 @@ def main():
     with out_path.open("w", encoding="utf-8") as w:
         for f in args.files:
             parsed = parse_ldraw_steps(f)
-            parsed = _enrich_with_rb_and_colors(parsed, rbmap, ldraw_colors, rbcolors)
-            # bbox optional (we'll patch below)
-            rec = build_record(f, parsed, master_parts_version="")
+            parsed = _enrich_with_rb_and_colors(parsed, rbmap, ldraw_colors, load_rebrickable_colors.cache)
+
+            bbox_mm = None
+            if args.bbox:
+                bbox_mm = _compute_bbox_mm_or_none(f)
+
+            rec = build_record(f, parsed, master_parts_version="", final_bbox_mm=bbox_mm)
             w.write(json.dumps(rec, ensure_ascii=False) + "\n")
             written += 1
             print(f"Wrote model record for {f}")
 
     print(f"Done. Records written: {written}  {out_path}")
-
 if __name__ == "__main__":
     main()
-# --- PATCH START: append into build_models_from_ldr.py after imports ---
-def _triangles_from_expander(expander, model_path_abs: Path, ldraw_root: Path):
-    """
-    Try a variety of common method names + path forms to get triangles in LDU.
-    Return list of triangles or None.
-    """
-    candidates = []
-    # absolute path
-    candidates.append(str(model_path_abs))
-    # path relative to ldraw_root (if model is inside ldraw_root)
-    try:
-        rel = model_path_abs.relative_to(ldraw_root)
-        candidates.append(str(rel).replace("\\", "/"))
-    except Exception:
-        pass
-
-    methods = [
-        "expand_to_triangles",
-        "expand_file",
-        "triangulate",
-        "expand"
-    ]
-
-    for meth in methods:
-        fn = getattr(expander, meth, None)
-        if not callable(fn):
-            continue
-        for pth in candidates:
-            try:
-                tris = fn(pth)
-                if tris:
-                    return tris
-            except Exception:
-                continue
-    return None
-
-def _compute_bbox_mm_or_none(ldr_root_file: str):
-    try:
-        from phase0_backend.scripts.ldraw_expand import LDrawIndex, LDrawExpander
-    except Exception as e:
-        print(f"[bbox] Skipping (ldraw_expand import failed: {e})")
-        return None
-
-    try:
-        model_abs = Path(ldr_root_file).resolve()
-
-        # locate LDraw root by walking up to a folder containing 'parts'
-        ldraw_root = None
-        for parent in model_abs.parents:
-            if (parent / "parts").exists():
-                ldraw_root = parent
-                break
-        if ldraw_root is None:
-            print("[bbox] Could not locate LDraw root (no 'parts' folder found upward).")
-            return None
-
-        index = LDrawIndex(str(ldraw_root))
-        expander = LDrawExpander(index)
-
-        tris = _triangles_from_expander(expander, model_abs, ldraw_root)
-        if not tris:
-            print("[bbox] No triangles produced; skipping bbox.")
-            return None
-
-        minx=miny=minz= float("inf")
-        maxx=maxy=maxz= float("-inf")
-        for tri in tris:
-            for (x,y,z) in tri:
-                if x<minx: minx=x
-                if y<miny: miny=y
-                if z<minz: minz=z
-                if x>maxx: maxx=x
-                if y>maxy: maxy=y
-                if z>maxz: maxz=z
-
-        min_mm = [round(minx*LDU_TO_MM,3), round(miny*LDU_TO_MM,3), round(minz*LDU_TO_MM,3)]
-        max_mm = [round(maxx*LDU_TO_MM,3), round(maxy*LDU_TO_MM,3), round(maxz*LDU_TO_MM,3)]
-        return {"min": min_mm, "max": max_mm}
-    except Exception as e:
-        print(f"[bbox] Skipping (expand error: {e})")
-        return None
-# --- PATCH END ---
