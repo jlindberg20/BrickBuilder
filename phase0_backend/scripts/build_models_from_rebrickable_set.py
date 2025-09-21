@@ -1,6 +1,7 @@
 ﻿import argparse, csv, json
 from pathlib import Path
 from datetime import datetime, timezone
+from collections import defaultdict
 
 def load_sets(path):
     d={}
@@ -16,35 +17,47 @@ def load_themes(path):
         for row in r: d[int(row["id"])]=row["name"]
     return d
 
-def load_inventories(path):
-    d={}
+def load_inventories_by_set(path):
+    # set_num -> list of (id, version)
+    m=defaultdict(list)
     with open(path, newline="", encoding="utf-8") as f:
         r=csv.DictReader(f)
-        for row in r: d[int(row["id"])]={"id":int(row["id"]), "set_num":row["set_num"], "version":int(row["version"]) if row.get("version") else None}
-    return d
+        for row in r:
+            try:
+                inv_id = int(row["id"])
+                ver    = int(row["version"]) if row.get("version") else 0
+                m[row["set_num"]].append((inv_id, ver))
+            except Exception:
+                continue
+    return m
 
 def load_inventory_sets(path):
-    from collections import defaultdict
-    d=defaultdict(list)
+    # set_num -> list of inventory_id (fallback only)
+    m=defaultdict(list)
     with open(path, newline="", encoding="utf-8") as f:
         r=csv.DictReader(f)
         for row in r:
-            d[row["set_num"]].append({"inventory_id":int(row["inventory_id"]), "quantity":int(row["quantity"])})
-    return d
+            try:
+                m[row["set_num"]].append(int(row["inventory_id"]))
+            except Exception:
+                continue
+    return m
 
-def load_inventory_parts(path):
-    from collections import defaultdict
-    d=defaultdict(list)
+def load_inventory_parts_grouped(path):
+    # inventory_id -> {(part_num,color_id) -> qty}, excluding spares
+    m=defaultdict(lambda: defaultdict(int))
     with open(path, newline="", encoding="utf-8") as f:
         r=csv.DictReader(f)
         for row in r:
-            d[int(row["inventory_id"])].append({
-                "part_num": row["part_num"],
-                "color_id": row["color_id"],
-                "quantity": int(row["quantity"]),
-                "is_spare": (row.get("is_spare") == "t")
-            })
-    return d
+            try:
+                if row.get("is_spare") == "t":
+                    continue
+                iid = int(row["inventory_id"])
+                key = (row["part_num"], row["color_id"])
+                m[iid][key] += int(row["quantity"])
+            except Exception:
+                continue
+    return m
 
 def load_colors_rb(path):
     # rb_color_id -> '#RRGGBB'
@@ -65,12 +78,12 @@ def main():
     args=ap.parse_args()
 
     root = Path(args.rb_root)
-    sets = load_sets(str(root/"sets.csv"))
-    themes = load_themes(str(root/"themes.csv"))
-    inventories = load_inventories(str(root/"inventories.csv"))
-    inv_sets = load_inventory_sets(str(root/"inventory_sets.csv"))
-    inv_parts = load_inventory_parts(str(root/"inventory_parts.csv"))
-    rb_colors = load_colors_rb(str(root/"colors.csv"))
+    sets         = load_sets(str(root/"sets.csv"))
+    themes       = load_themes(str(root/"themes.csv"))
+    inv_by_set   = load_inventories_by_set(str(root/"inventories.csv"))
+    inv_sets_fb  = load_inventory_sets(str(root/"inventory_sets.csv"))  # fallback
+    inv_parts_g  = load_inventory_parts_grouped(str(root/"inventory_parts.csv"))
+    rb_colors    = load_colors_rb(str(root/"colors.csv"))
 
     s = sets.get(args.set_num)
     if not s:
@@ -78,23 +91,25 @@ def main():
 
     theme_name = themes.get(int(s["theme_id"])) if s.get("theme_id") else None
 
-    # choose the latest inventory id for this set (max id)
-    rel = inv_sets.get(args.set_num, [])
+    # Choose inventory_id:
+    # 1) prefer inventories.csv (max version for set_num)
+    # 2) fallback to inventory_sets.csv (max id)
+    iid = None
+    lst = inv_by_set.get(args.set_num)
+    if lst:
+        lst.sort(key=lambda t: (t[1], t[0]))  # sort by (version, id)
+        iid = lst[-1][0]
+    else:
+        fb = inv_sets_fb.get(args.set_num, [])
+        if fb:
+            iid = max(fb)
+
+    # Build BOM from inventory_parts.csv for this iid
     bom=[]
-    if rel:
-        inv_ids = sorted([x["inventory_id"] for x in rel])
-        iid = inv_ids[-1]
-        rows = inv_parts.get(iid, [])
-        # aggregate by (part_num,color_id) excluding spares
-        from collections import defaultdict
-        agg=defaultdict(int)
-        for r in rows:
-            if r.get("is_spare"):
-                continue
-            key=(r["part_num"], r["color_id"])
-            agg[key]+=int(r["quantity"])
-        for (pnum,cid), qty in sorted(agg.items(), key=lambda kv: (-kv[1], kv[0])):
-            item={"rb_part_num": pnum, "qty": qty, "rb_color_id": str(cid)}
+    if iid is not None:
+        agg = inv_parts_g.get(iid, {})
+        for (pnum, cid), qty in sorted(agg.items(), key=lambda kv: (-kv[1], kv[0])):
+            item = {"rb_part_num": pnum, "qty": int(qty), "rb_color_id": str(cid)}
             hexv = rb_colors.get(str(cid))
             if hexv: item["color_rgb_hex"]=hexv
             bom.append(item)
@@ -104,7 +119,7 @@ def main():
     rec = {
         "id": f"model:rb:{args.set_num}",
         "type": "model",
-        "source_ids": { "rb": {"set_num": args.set_num } },
+        "source_ids": { "rb": { "set_num": args.set_num } },
         "name": s["name"],
         "metadata": {
             "piece_count": piece_count,
@@ -122,7 +137,7 @@ def main():
             "source": f"https://rebrickable.com/sets/{args.set_num}/"
         },
         "links": {
-            "parser_version": "rb_set_builder_v0.1",
+            "parser_version": "rb_set_builder_v0.2",
             "build_tools": "python"
         }
     }
@@ -130,9 +145,7 @@ def main():
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     with open(args.out, "a", encoding="utf-8") as w:
         w.write(json.dumps(rec, ensure_ascii=False) + "\n")
-    print(f"Wrote set-model record for {args.set_num} → {args.out}")
+    print(f"Wrote set-model record for {args.set_num} → {args.out} (inventory_id={iid})")
 
 if __name__ == "__main__":
     main()
-
-
