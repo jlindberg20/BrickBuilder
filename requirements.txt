@@ -6,3 +6,5 @@ tqdm
 numpy
 trimesh
 openai
+pymupdf
+pillow
