@@ -1,4 +1,4 @@
-Folder PATH listing for volume OS
+Folder PATH listing for volume OS DATE ===> 09/26/2025
 Volume serial number is 0C80-F607
 C:.
 |   .env
@@ -13,6 +13,7 @@ C:.
 |   README.md
 |   requirements.txt
 |   schema_test.py
+|   yolov8n.pt
 |   
 +---.venv
 |   |   .gitignore
@@ -12761,18 +12762,136 @@ C:.
 |           trimesh.exe
 |           
 +---bb_runs
+|   +---gt_check
+|   |       8924-1-0043.png
+|   |       8927-1-0018.png
+|   |       9469-1-0011.png
+|   |       9490-1-0016.png
+|   |       9674-1-0024.png
+|   |       
+|   +---label_audit
+|   |   |   8728-1-0031.png
+|   |   |   8728-1-0031.txt
+|   |   |   8729-1-0026.png
+|   |   |   8729-1-0026.txt
+|   |   |   8743-1-0012.png
+|   |   |   8743-1-0012.txt
+|   |   |   8762-1-0004.png
+|   |   |   8762-1-0004.txt
+|   |   |   8784-1-0034.png
+|   |   |   8784-1-0034.txt
+|   |   |   8924-1-0043.png
+|   |   |   8924-1-0043.txt
+|   |   |   8925-1-0039.png
+|   |   |   8925-1-0039.txt
+|   |   |   8926-1-0060.png
+|   |   |   8926-1-0060.txt
+|   |   |   8927-1-0009.png
+|   |   |   8927-1-0009.txt
+|   |   |   8927-1-0014.png
+|   |   |   8927-1-0014.txt
+|   |   |   8927-1-0018.png
+|   |   |   8927-1-0018.txt
+|   |   |   8961-1-0008.png
+|   |   |   8961-1-0008.txt
+|   |   |   9444-1-0040.png
+|   |   |   9444-1-0040.txt
+|   |   |   9468-1-0038.png
+|   |   |   9468-1-0038.txt
+|   |   |   9469-1-0011.png
+|   |   |   9469-1-0011.txt
+|   |   |   9471-1-0052.png
+|   |   |   9471-1-0052.txt
+|   |   |   9472-1-0055.png
+|   |   |   9472-1-0055.txt
+|   |   |   9495-1-0031.png
+|   |   |   9495-1-0031.txt
+|   |   |   9495-1-0051.png
+|   |   |   9495-1-0051.txt
+|   |   |   9496-1-0012.png
+|   |   |   9496-1-0012.txt
+|   |   |   
+|   |   \---audit
+|   |           8728-1-0031.jpg
+|   |           8729-1-0026.jpg
+|   |           8743-1-0012.jpg
+|   |           8762-1-0004.jpg
+|   |           8784-1-0034.jpg
+|   |           8924-1-0043.jpg
+|   |           8925-1-0039.jpg
+|   |           8926-1-0060.jpg
+|   |           8927-1-0009.jpg
+|   |           8927-1-0014.jpg
+|   |           8927-1-0018.jpg
+|   |           8961-1-0008.jpg
+|   |           9444-1-0040.jpg
+|   |           9468-1-0038.jpg
+|   |           9469-1-0011.jpg
+|   |           9471-1-0052.jpg
+|   |           9472-1-0055.jpg
+|   |           9495-1-0031.jpg
+|   |           9495-1-0051.jpg
+|   |           9496-1-0012.jpg
+|   |           
+|   +---quick_preds_20250924_220122
+|   |   \---vis
+|   |           8728-1-0031.jpg
+|   |           8729-1-0026.jpg
+|   |           8743-1-0012.jpg
+|   |           8745-1-0027.jpg
+|   |           8762-1-0004.jpg
+|   |           8784-1-0034.jpg
+|   |           8785-1-0005.jpg
+|   |           8924-1-0043.jpg
+|   |           8925-1-0039.jpg
+|   |           8926-1-0060.jpg
+|   |           8927-1-0009.jpg
+|   |           8927-1-0014.jpg
+|   |           8927-1-0018.jpg
+|   |           8961-1-0008.jpg
+|   |           9442-1-0033.jpg
+|   |           9442-1-0042.jpg
+|   |           9444-1-0040.jpg
+|   |           9463-1-0050.jpg
+|   |           9466-1-0008.jpg
+|   |           9468-1-0038.jpg
+|   |           9469-1-0011.jpg
+|   |           9471-1-0052.jpg
+|   |           9472-1-0055.jpg
+|   |           9474-1-0053.jpg
+|   |           9490-1-0016.jpg
+|   |           9495-1-0031.jpg
+|   |           9495-1-0051.jpg
+|   |           9496-1-0012.jpg
+|   |           9674-1-0024.jpg
+|   |           9797-1-0035.jpg
+|   |           
 |   +---stepdet_v1
 |   |       train.log
 |   |       
 |   +---stepdet_v12
+|   |   |   args.yaml
+|   |   |   
 |   |   \---weights
 |   +---stepdet_v1_long
 |   |       train.log
 |   |       train.stream.log
 |   |       
 |   +---stepdet_v1_long2
+|   |   |   args.yaml
+|   |   |   labels.jpg
+|   |   |   train_batch0.jpg
+|   |   |   train_batch1.jpg
+|   |   |   train_batch2.jpg
+|   |   |   
 |   |   \---weights
 |   +---stepdet_v1_long3
+|   |   |   args.yaml
+|   |   |   labels.jpg
+|   |   |   train_batch0.jpg
+|   |   |   train_batch1.jpg
+|   |   |   train_batch2.jpg
+|   |   |   
 |   |   +---preds_20250924_214925
 |   |   +---preds_20250924_215021
 |   |   \---weights
@@ -12780,11 +12899,102 @@ C:.
 |   |       train.stream.log
 |   |       
 |   +---stepdet_v1_long42
-|   |       results.csv
-|   |       
+|   |   |   args.yaml
+|   |   |   labels.jpg
+|   |   |   results.csv
+|   |   |   train_batch0.jpg
+|   |   |   train_batch1.jpg
+|   |   |   train_batch2.jpg
+|   |   |   
+|   |   \---weights
+|   |           best.pt
+|   |           epoch0.pt
+|   |           epoch1.pt
+|   |           epoch2.pt
+|   |           epoch3.pt
+|   |           epoch4.pt
+|   |           epoch5.pt
+|   |           epoch6.pt
+|   |           epoch7.pt
+|   |           last.pt
+|   |           
 |   \---stepdet_v1_py
-|           results.csv
-|           
+|       |   args.yaml
+|       |   labels.jpg
+|       |   results.csv
+|       |   train_batch0.jpg
+|       |   train_batch1.jpg
+|       |   train_batch2.jpg
+|       |   
+|       +---gt_vis
+|       |       8728-1-0031.png
+|       |       8729-1-0026.png
+|       |       8743-1-0012.png
+|       |       8745-1-0027.png
+|       |       8762-1-0004.png
+|       |       8784-1-0034.png
+|       |       8785-1-0005.png
+|       |       8924-1-0043.png
+|       |       8925-1-0039.png
+|       |       8926-1-0060.png
+|       |       8927-1-0009.png
+|       |       8927-1-0014.png
+|       |       8927-1-0018.png
+|       |       8961-1-0008.png
+|       |       9442-1-0033.png
+|       |       9442-1-0042.png
+|       |       9444-1-0040.png
+|       |       9463-1-0050.png
+|       |       9466-1-0008.png
+|       |       9468-1-0038.png
+|       |       9469-1-0011.png
+|       |       9471-1-0052.png
+|       |       9472-1-0055.png
+|       |       9474-1-0053.png
+|       |       9490-1-0016.png
+|       |       9495-1-0031.png
+|       |       9495-1-0051.png
+|       |       9496-1-0012.png
+|       |       9674-1-0024.png
+|       |       9797-1-0035.png
+|       |       
+|       +---preds_epoch1
+|       |   \---vis
+|       |           8728-1-0031.jpg
+|       |           8729-1-0026.jpg
+|       |           8743-1-0012.jpg
+|       |           8745-1-0027.jpg
+|       |           8762-1-0004.jpg
+|       |           8784-1-0034.jpg
+|       |           8785-1-0005.jpg
+|       |           8924-1-0043.jpg
+|       |           8925-1-0039.jpg
+|       |           8926-1-0060.jpg
+|       |           8927-1-0009.jpg
+|       |           8927-1-0014.jpg
+|       |           8927-1-0018.jpg
+|       |           8961-1-0008.jpg
+|       |           9442-1-0033.jpg
+|       |           9442-1-0042.jpg
+|       |           9444-1-0040.jpg
+|       |           9463-1-0050.jpg
+|       |           9466-1-0008.jpg
+|       |           9468-1-0038.jpg
+|       |           9469-1-0011.jpg
+|       |           9471-1-0052.jpg
+|       |           9472-1-0055.jpg
+|       |           9474-1-0053.jpg
+|       |           9490-1-0016.jpg
+|       |           9495-1-0031.jpg
+|       |           9495-1-0051.jpg
+|       |           9496-1-0012.jpg
+|       |           9674-1-0024.jpg
+|       |           9797-1-0035.jpg
+|       |           
+|       \---weights
+|               best.pt
+|               last.pt
+|               
 +---data
 |   +---annot
 |   |   +---images
@@ -172341,6 +172551,7 @@ C:.
 |   |   |   coverage_models.py
 |   |   |   debug_ids_in_rb.py
 |   |   |   debug_rb_schema.py
+|   |   |   detect_steps_v0.py
 |   |   |   enrich_commerce.py
 |   |   |   enrich_instructions_from_api.py
 |   |   |   enrich_rb_external_ids.py
@@ -172348,9 +172559,15 @@ C:.
 |   |   |   export_mesh_small.py
 |   |   |   fuse_crosswalk_to_master.py
 |   |   |   harvest_instructions.py
+|   |   |   index_pages.py
+|   |   |   inference_from_newest.py
+|   |   |   inference_val.py
+|   |   |   inference_val_live.py
 |   |   |   instructions_html_fallback.py
 |   |   |   instructions_resolver.py
+|   |   |   label_audit.py
 |   |   |   ldraw_expand.py
+|   |   |   make_pseudolabels.py
 |   |   |   merge_marketplaces_bo.py
 |   |   |   prepare_vector_index_inputs.py
 |   |   |   probe_first_matched.py
@@ -172359,8 +172576,13 @@ C:.
 |   |   |   reb_build_parts.py
 |   |   |   reb_qc_parts.py
 |   |   |   smoketest_brickowl.py
+|   |   |   train_yolo_stepdet.py
+|   |   |   train_yolo_stepdet_long.py
 |   |   |   validate_instruction_coverage.py
 |   |   |   validate_parts_jsonl.py
+|   |   |   val_from_newest.py
+|   |   |   visualize_gt_labels.py
+|   |   |   viz_gt_labels.py
 |   |   |   __init__.py
 |   |   |   
 |   |   \---__pycache__
@@ -172388,6 +172610,20 @@ C:.
 |   \---__pycache__
 |           __init__.cpython-313.pyc
 |           
++---runs
+|   \---detect
+|       \---val
+|               BoxF1_curve.png
+|               BoxPR_curve.png
+|               BoxP_curve.png
+|               BoxR_curve.png
+|               confusion_matrix.png
+|               confusion_matrix_normalized.png
+|               val_batch0_labels.jpg
+|               val_batch0_pred.jpg
+|               val_batch1_labels.jpg
+|               val_batch1_pred.jpg
+|               
 \---tools
     |   Analyze-InstructionsJsonl.ps1
     |   Enrich-Instructions-Brickset-UseInstructions2.ps1
