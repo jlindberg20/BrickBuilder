@@ -239,3 +239,27 @@ __marimo__/
 meshes/
 voxels/
 
+# BrickBuilder cleanup (YOLO, scratch, venv, logs, heavy assets moved out)
+.venv/
+bb_runs/
+png/
+txt/
+csv/index/steps_candidates.smoke*
+jsonl/index/steps_candidates.smoke*
+data/processed/models/master_models.with_pages.*.jsonl
+data/processed/models/pdfs/__trash_*
+stepdet_v1_long42/
+stepdet_v1_py/
+stream.log
+data/annot/
+data/index/
+data/logs/
+data/processed/models/__trash_*
+data/processed/rebrickable/validation/
+data/raw/pilot/
+data/scratch/
+data/steps/
+data/mesh/
+data/processed/crosswalk/
+data/processes/index/
+data/processed/index/
