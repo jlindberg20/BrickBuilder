@@ -52,7 +52,8 @@ def build_request_from_template(tpl: Dict[str, Any], params: Dict[str, Any], api
     # extensible to oauth1/2 later if needed
     return method, url, headers, query, auth_obj
 
-def http_json(method: str, url: str, headers: Dict[str, str], params: Dict[str, Any], auth):
-    resp = requests.request(method, url, headers=headers, params=params, auth=auth, timeout=15)
+def http_json(method: str, url: str, headers: Dict[str, str], params: Dict[str, Any], auth, timeout: float = 5.0):
+    resp = requests.request(method, url, headers=headers, params=params, auth=auth, timeout=timeout)
     resp.raise_for_status()
     return resp.json(), resp
+

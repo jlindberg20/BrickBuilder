@@ -13,7 +13,7 @@ OUT_DIR = Path("data/mesh/obj")
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 MANIFEST = Path("data/mesh/obj_manifest_small.csv")
 
-BATCH_LIMIT = 5   # keep small and safe for the first pass
+BATCH_LIMIT = 5vhnh,   # keep small and safe for the first pass
 
 def iter_jsonl(path: Path) -> Iterable[dict]:
     with open(path, "r", encoding="utf-8") as f:
