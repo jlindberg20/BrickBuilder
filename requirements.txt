@@ -1,4 +1,7 @@
-$env:BRICKLINK_CONSUMER_KEY    = "0922E9E9F065450DBF262A91BBF53D3D"
-$env:BRICKLINK_CONSUMER_SECRET = "5C362E2E237147508AE76A531323DA74"
-$env:BRICKLINK_TOKEN           = "E2CC9FD2123C45398780B824ADA3345B"
-$env:BRICKLINK_TOKEN_SECRET    = "C4EB9515382246A190EA241FBF6B0EA2"
+yeah these should be returning valid marketplace data because they have the marketplace data already in the marketplace jsonL file I can see it so we were able to pull it before. 
+PS C:\Users\Optiplex 9020\Desktop\BrickBuilder>  python bl_smoke.py --parts 6920 6923 69234 --color 86
+ --currency USD
+>>
+{"rb_part_num":"6920","bricklink":{"part_no":"6920","currency":"USD","per_color":{"86":{"slices":{"stock_used_world":null,"sold_new_US":null,"sold_used_world":null,"stock_new_world":null,"sold_new_world":null,"stock_new_US":null},"color_id":86,"element_id":null,"color_name":null}}},"links":{"catalog":"https://www.bricklink.com/v2/catalog/catalogitem.page?P=6920"},"last_updated":"2025-10-11T20:16:04.166874+00:00"}
+{"rb_part_num":"6923","bricklink":{"part_no":"6923","currency":"USD","per_color":{"86":{"slices":{"stock_used_world":null,"sold_new_US":null,"sold_used_world":null,"stock_new_world":null,"sold_new_world":null,"stock_new_US":null},"color_id":86,"element_id":null,"color_name":null}}},"links":{"catalog":"https://www.bricklink.com/v2/catalog/catalogitem.page?P=6923"},"last_updated":"2025-10-11T20:16:07.565034+00:00"}
+{"rb_part_num":"69234","bricklink":{"part_no":"69234","currency":"USD","per_color":{"86":{"slices":{"stock_used_world":null,"sold_new_US":null,"sold_used_world":null,"stock_new_world":null,"sold_new_world":null,"stock_new_US":null},"color_id":86,"element_id":null,"color_name":null}}},"links":{"catalog":"https://www.bricklink.com/v2/catalog/catalogitem.page?P=69234"},"last_updated":"2025-10-11T20:16:11.765399+00:00"}
