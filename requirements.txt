@@ -1,7 +1,119 @@
-yeah these should be returning valid marketplace data because they have the marketplace data already in the marketplace jsonL file I can see it so we were able to pull it before. 
-PS C:\Users\Optiplex 9020\Desktop\BrickBuilder>  python bl_smoke.py --parts 6920 6923 69234 --color 86
- --currency USD
->>
-{"rb_part_num":"6920","bricklink":{"part_no":"6920","currency":"USD","per_color":{"86":{"slices":{"stock_used_world":null,"sold_new_US":null,"sold_used_world":null,"stock_new_world":null,"sold_new_world":null,"stock_new_US":null},"color_id":86,"element_id":null,"color_name":null}}},"links":{"catalog":"https://www.bricklink.com/v2/catalog/catalogitem.page?P=6920"},"last_updated":"2025-10-11T20:16:04.166874+00:00"}
-{"rb_part_num":"6923","bricklink":{"part_no":"6923","currency":"USD","per_color":{"86":{"slices":{"stock_used_world":null,"sold_new_US":null,"sold_used_world":null,"stock_new_world":null,"sold_new_world":null,"stock_new_US":null},"color_id":86,"element_id":null,"color_name":null}}},"links":{"catalog":"https://www.bricklink.com/v2/catalog/catalogitem.page?P=6923"},"last_updated":"2025-10-11T20:16:07.565034+00:00"}
-{"rb_part_num":"69234","bricklink":{"part_no":"69234","currency":"USD","per_color":{"86":{"slices":{"stock_used_world":null,"sold_new_US":null,"sold_used_world":null,"stock_new_world":null,"sold_new_world":null,"stock_new_US":null},"color_id":86,"element_id":null,"color_name":null}}},"links":{"catalog":"https://www.bricklink.com/v2/catalog/catalogitem.page?P=69234"},"last_updated":"2025-10-11T20:16:11.765399+00:00"}
+$repo       = "C:\Users\Optiplex 9020\Desktop\BrickBuilder"
+$masterPath = Join-Path $repo "master_parts.jsonl"                                   # root master
+$marketPath = Join-Path $repo "data\processed\master\master_parts.marketplace.jsonl"
+
+# ▶ Edit this list to whatever you want to preview:
+$targets    = @('30370','11217pr0008','33062','3626cpr1628','30370pr0018','3626cpr3933')
+$targetsJson = ($targets | ConvertTo-Json -Compress)
+
+$py = @"
+import json, re
+
+master_path = r"$masterPath"
+market_path = r"$marketPath"
+targets = {str(t).lower() for t in json.loads(r'''$targetsJson''')}
+
+def safe_json(line):
+    try: return json.loads(line)
+    except: return None
+
+def get_rb_from_master(obj):
+    rb = (obj.get('source_ids') or {}).get('rb', {}).get('part_num')
+    if rb: return str(rb)
+    mid = obj.get('id')
+    if isinstance(mid,str):
+        m = re.match(r'^part:rb:(.+)$', mid)
+        if m: return m.group(1)
+    return None
+
+def get_bl_from_master(obj):
+    bl = (obj.get('marketplaces') or {}).get('bricklink', {}).get('part_id')
+    if bl: return str(bl)
+    url = (obj.get('external_links') or {}).get('bricklink')
+    if isinstance(url,str):
+        m = re.search(r'[?&]P=([^&"#]+)', url)
+        if m: return m.group(1)
+    return None
+
+# --- load marketplace maps ---
+market_by_rb = {}
+market_by_bl = {}
+with open(market_path,'r',encoding='utf-8',errors='replace') as f:
+    for line in f:
+        s = line.strip()
+        if not s: continue
+        o = safe_json(s)
+        if not o: continue
+        rb = o.get('rb_part_num')
+        bl = (o.get('bricklink') or {}).get('part_no')
+        bl_tree = o.get('bricklink')
+        if rb and bl_tree:
+            market_by_rb[str(rb).lower()] = bl_tree
+        if bl and bl_tree:
+            market_by_bl[str(bl).lower()] = bl_tree
+
+# index master (keep line + parsed)
+master = []
+with open(master_path,'r',encoding='utf-8',errors='replace') as f:
+    for line in f:
+        s = line.strip()
+        if not s: continue
+        o = safe_json(s)
+        if not o:
+            master.append((s,None))
+        else:
+            rb = get_rb_from_master(o)
+            bl = get_bl_from_master(o)
+            master.append((s, {'obj':o, 'rb':(rb.lower() if rb else None), 'bl':(bl.lower() if bl else None)}))
+
+def find_master_hit(tgt):
+    for raw, meta in master:
+        if not meta or not meta['obj']: continue
+        o = meta['obj']; rb = meta['rb']; bl = meta['bl']
+        if rb == tgt: return (raw,o,'rb')
+        if isinstance(o.get('id'),str) and o['id'].lower()==f"part:rb:{tgt}":
+            return (raw,o,'id')
+        # also allow direct RB part_num string match without lower cache
+        if (o.get('source_ids') or {}).get('rb',{}).get('part_num','').lower()==tgt:
+            return (raw,o,'rb')
+    return None
+
+print("=== Merged previews ===")
+
+missing = []
+found = []
+
+for tgt in targets:
+    hit = find_master_hit(tgt)
+    if not hit:
+        missing.append(tgt)
+        continue
+    raw,obj,mode = hit
+    rb = get_rb_from_master(obj)
+    bl = get_bl_from_master(obj)
+
+    bl_tree = None
+    merged_from = None
+    if rb and rb.lower() in market_by_rb:
+        bl_tree = market_by_rb[rb.lower()]
+        merged_from = f"marketplace by rb_part_num={rb}"
+    elif bl and bl.lower() in market_by_bl:
+        bl_tree = market_by_bl[bl.lower()]
+        merged_from = f"marketplace by bricklink.part_no={bl}"
+    elif tgt in market_by_rb:
+        bl_tree = market_by_rb[tgt]
+        merged_from = f"marketplace by target={tgt}"
+
+    note = merged_from or "NO marketplace match for this part"
+    out = dict(obj)
+    if bl_tree:
+        out["bricklink"] = bl_tree
+    print(f"--- {tgt} (master match via {mode}) -> {note} ---")
+    print(json.dumps(out, ensure_ascii=False))
+    print("-"*80)
+
+if missing:
+    print("Not found in master (by RB/id): " + ", ".join(missing))
+"@
+
+$py | & python -
