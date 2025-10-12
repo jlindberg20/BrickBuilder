@@ -263,3 +263,5 @@ data/mesh/
 data/processed/crosswalk/
 data/processes/index/
 data/processed/index/
+/master_models.jsonl
+/master_parts.jsonl
