@@ -1,0 +1,102 @@
+# data_segmentation.yaml
+# BrickBuilder — Segmentation Dataset Config (placeholder + living spec)
+# Purpose: Define a single-class segmentation task to isolate the "model image" region on instruction pages.
+# Status: Placeholder — safe to commit now; expand fields as Phase-1 model-image extraction proceeds.
+
+# --- Minimal YOLO-ready fields (works as-is if you point the paths to real folders) ---
+path: ./data/processed/instructions_png                  # root of images (change later)
+train: images/train                                      # relative to 'path'
+val: images/val                                          # relative to 'path'
+test: images/test                                        # optional
+
+# Single class for now: the assembled-model region on an instruction page
+names:
+  - model_image
+
+# --- Extended BrickBuilder metadata (for our quality charter & future automation) ---
+brickbuilder:
+  dataset_id: "bb-seg-model-image"
+  dataset_version: "0.0.1-placeholder"
+  last_updated_utc: "TBD"   # fill when first real labels land
+  owner: "BrickBuilder / Jacob Lindberg"
+  description: >
+    Segmentation of assembled-model regions on LEGO instruction pages.
+    Output masks highlight the main model depiction used for model-image extraction.
+    This enables downstream crops, renders, and instruction-to-3D alignment.
+
+  # Source & lineage
+  sources:
+    - name: "instruction_pdfs"
+      location: "./data/instructions"         # canonical PDFs (read-only)
+      note: "PDFs rendered to PNGs in Phase-0. See rendering pipeline logs."
+
+  # Expected filesystem layout (target; safe as placeholder)
+  layout:
+    images_dir: "./data/processed/instructions_png"
+    labels_dir: "./data/processed/instructions_png/labels-seg"
+    yolo_format: "YOLO polygon segmentation (.txt per image, class + normalized polygons)"
+    example_image: "images/train/60000-1_p0005.png"
+    example_label: "labels/train/60000-1_p0005.txt"
+
+  # Label specification (schema as contract)
+  label_spec:
+    task: "segmentation"
+    classes:
+      - id: 0
+        name: "model_image"
+        description: "The primary assembled-model region on the page (excluding parts callouts, arrows, text, BOM strips)."
+        rules:
+          - "Prefer one tight mask per page capturing the main model area."
+          - "Exclude boxed part-callout panels extracted in Phase-0."
+          - "Exclude step arrows, textual annotations, page headers/footers, BOM strips."
+          - "If multiple candidate model regions exist, label the largest coherent assembly region."
+
+    format:
+      type: "yolo-seg"
+      txt_line: "class_id x1 y1 x2 y2 ... xN yN   # normalized [0..1], multiple polygons as multiple lines"
+      multi_polygon: "One line per polygon of the same class; model_image usually 1 polygon."
+
+  # Quality gates & validation hints
+  validation:
+    required_coverage_pct_min: 0.15     # mask should typically cover at least ~15% of page area
+    bbox_aspect_ratio_limit: [0.2, 5.0] # proxy sanity check from mask bbox
+    min_polygon_points: 6
+    no_self_intersections: true
+    leak_checks:
+      exclude_regions: ["part_callouts", "arrows", "text_blocks", "bom_strips"]
+      step_panels_index: "./data/processed/master/step_panels.index.jsonl"   # produced in Phase-0 (reference if available)
+
+  # Train/val/test split policy (documented; apply later with a small script)
+  split_policy:
+    method: "by-model-id"
+    rationale: "Avoid page leakage across splits; keep all pages of a model in the same split."
+    target_ratios: { train: 0.80, val: 0.10, test: 0.10 }
+    seed: 42
+
+  # Augmentations (to be applied in training config; documented here)
+  augmentations_plan:
+    geometric: ["flip", "rotate_small", "scale", "perspective_light"]
+    photometric: ["brightness", "contrast", "jpeg_artifact_light"]
+    occlusion: ["random_box_dropout_light"]
+    notes: "Avoid heavy perspective/affine that warps thin outlines excessively."
+
+  # Downstream consumers
+  downstream:
+    - "Model-image cropping and export for Phase-1 engine"
+    - "Image→3D alignment heuristics"
+    - "Training set for instruction→model classifiers"
+
+  # Determinism & reproducibility
+  reproducibility:
+    schema_file: "./schemas/segmentation.label.schema.json   # optional future schema"
+    runbook: "./phase1_segmentation/README.md                # to author later"
+    content_hashing: "Enable per-image+label SHA256 manifest for splits."
+
+# --- Notes for future-you (safe to keep in the file) ---
+# 1) When ready, render PDFs to PNGs (if not already) under data/processed/instructions_png/images/{train,val,test}.
+# 2) Create YOLO-seg labels under data/processed/instructions_png/labels/{train,val,test}, mirroring image filenames.
+# 3) Keep only class '0' for now (model_image). If we later add more classes, append under 'names:' and label_spec.classes.
+# 4) Quick check command once data is populated:
+#      yolo task=segment mode=train model=yolov8s-seg.pt data=data_segmentation.yaml imgsz=1024 epochs=50
+# 5) To visualize masks:
+#      yolo task=segment mode=val model=runs/segment/train/weights/best.pt data=data_segmentation.yaml save_txt=False save_json=True
