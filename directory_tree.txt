@@ -1,10 +1,9 @@
-DATE: 10/13/2025
-
-Fold  er PATH listing for volume OS
+Folder PATH listing for volume OS
 Volume serial number is 0C80-F607
 C:.
 |   .env
 |   .gitignore
+|   data_segmentation.yaml
 |   directory_tree.txt
 |   master_models.jsonl
 |   master_parts.jsonl
