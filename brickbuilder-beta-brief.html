@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BrickBuilder Beta Testing Brief</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 11px; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, "Noto Sans", sans-serif;
+      line-height: 1.6;
+      color: #1a1a1a;
+      background: #fff;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 24px 32px;
+    }
+    h1 { font-size: 2rem; font-weight: 700; margin-bottom: 8px; color: #111; }
+    h2 { font-size: 1.4rem; font-weight: 600; margin: 20px 0 10px; color: #222; border-bottom: 2px solid #e0e0e0; padding-bottom: 4px; }
+    h3 { font-size: 1.15rem; font-weight: 600; margin: 14px 0 6px; color: #333; }
+    h4 { font-size: 1rem; font-weight: 600; margin: 10px 0 4px; color: #444; }
+    p { margin-bottom: 8px; }
+    ul, ol { margin: 6px 0 10px 18px; }
+    li { margin-bottom: 4px; }
+    table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 0.95rem; }
+    th, td { border: 1px solid #d0d0d0; padding: 6px 8px; text-align: left; }
+    th { background: #f5f5f5; font-weight: 600; }
+    .cover { text-align: center; padding: 30px 0 20px; border-bottom: 3px solid #333; margin-bottom: 20px; }
+    .cover h1 { font-size: 2.4rem; margin-bottom: 4px; }
+    .cover .subtitle { font-size: 1.1rem; color: #555; margin-bottom: 16px; }
+    .summary-box { background: #f9f9f9; border-left: 4px solid #444; padding: 12px 16px; margin: 16px 0; }
+    .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0; }
+    .contact-card { background: #fafafa; padding: 10px 12px; border: 1px solid #e0e0e0; }
+    .toc { background: #f5f5f5; padding: 12px 16px; margin: 16px 0; }
+    .toc ul { list-style: none; margin: 0; columns: 2; column-gap: 20px; }
+    .toc li { margin-bottom: 3px; }
+    .toc a { color: #333; text-decoration: none; }
+    .disclaimer { background: #fff8e6; border: 1px solid #e6d9a0; padding: 10px 12px; margin: 12px 0; font-size: 0.9rem; }
+    .script-box { background: #f0f4f8; border: 1px solid #c0d0e0; padding: 10px 12px; margin: 8px 0; font-size: 0.95rem; }
+    .script-box em { font-style: italic; color: #555; }
+    .metric-table th:first-child { width: 30%; }
+    .checklist li { list-style: none; margin-left: 0; }
+    .checklist li::before { content: "☐ "; }
+    code { background: #f0f0f0; padding: 1px 4px; font-size: 0.9em; }
+    .page-break { break-after: page; }
+    @media print {
+      html { font-size: 9.5px; }
+      body { padding: 0; max-width: 100%; }
+      .page-break { break-after: page; }
+      @page { margin: 0.6in 0.5in; @top-center { content: "BrickBuilder Beta Testing Brief"; font-size: 8pt; color: #666; } @bottom-right { content: "Page " counter(page); font-size: 8pt; color: #666; } }
+    }
+  </style>
+</head>
+<body>
+
+<header class="cover">
+  <h1>BrickBuilder Beta Testing Brief</h1>
+  <p class="subtitle">Product-Market Fit & Repeat-Purchase Intent Study</p>
+  <p><strong>Version 1.0</strong> · Confidential Research Document</p>
+</header>
+
+<section id="cover-summary">
+  <div class="summary-box">
+    <strong>Executive Summary:</strong> This brief provides a complete operational guide for an independent campaign manager to plan, recruit, observe, and evaluate a limited beta test of BrickBuilder; a service that transforms user ideas into their very own custom brick-building sets. The study focuses on one core question: after completing a full experience (discover → generate → order → receive → build → reflect), how many participants would independently order again within 30–60 days? The test targets 10 mothers who have children (preferably boys) ages 5–12 in the contiguous US and has a total allocated budget of $1,000 spanning over approximately 2 months.
+  </div>
+
+  <h3>Budget & Timeline</h3>
+  <ul>
+    <li><strong>Total Budget:</strong> $1,000 USD ($500 manager fee + $500 participant build costs)</li>
+    <li><strong>Duration:</strong> ~8 weeks (2 wks onboard → 2 wks recruit → 1 wk sessions → 2–3 wks build & feedback)</li>
+    <li><strong>Participants:</strong> 10 (from ~30 screened candidates)</li>
+  </ul>
+
+  <h3>Contacts</h3>
+  <div class="contact-grid">
+    <div class="contact-card">
+      <strong>Primary Contact</strong><br>
+      [Jacob L.], [Co-Founder]<br>
+      [jlindbergapr@gmail.com]
+    </div>
+    <div class="contact-card">
+      <strong>Co-Founder</strong><br>
+      [Jake J.], [Co-Founder]<br>
+      [jakejohnson3700@gmail.com]
+    </div>
+  </div>
+  <p><strong>Product URL:</strong> <a href="https://brickbuilder.ai/">https://brickbuilder.ai/</a></p>
+  <p><strong>Product Access Code:</strong> redmoon1</p>
+  <div class="disclaimer">
+    <strong>Non-Affiliation Notice:</strong> BrickBuilder is an independent service and is not affiliated with, endorsed by, or sponsored by the LEGO Group. All references to "bricks" denote compatible brick-building systems.
+  </div>
+</section>
+
+<nav class="toc">
+  <strong>Table of Contents</strong>
+  <ul>
+    <li><a href="#objectives">A. Objectives & Hypotheses</a></li>
+    <li><a href="#scope">B. Scope & Constraints</a></li>
+    <li><a href="#roles">C. Roles & Responsibilities</a></li>
+    <li><a href="#recruitment">D. Recruitment Plan & Screener</a></li>
+    <li><a href="#session">E. Session Protocol</a></li>
+    <li><a href="#fulfillment">F. Fulfillment & Build Tracking</a></li>
+    <li><a href="#postbuild">G. Post-Build Survey & Interview</a></li>
+    <li><a href="#metrics">H. Metrics & Analysis Plan</a></li>
+    <li><a href="#bias">I. Bias-Reduction Safeguards</a></li>
+    <li><a href="#legal">J. Legal, Ethics & Privacy</a></li>
+    <li><a href="#logistics">K. Logistics, Budget & Timeline</a></li>
+    <li><a href="#deliverables">L. Deliverables Checklist</a></li>
+    <li><a href="#appendices">M. Appendices</a></li>
+  </ul>
+</nav>
+
+<div class="page-break"></div>
+
+<main>
+
+<section id="objectives">
+  <h2>A. Objectives & Hypotheses</h2>
+  
+  <h3>Primary Objective</h3>
+  <p>Measure authentic repeat-purchase intent: After one complete end-to-end experience, how many participants would independently order another set within 30–60 days without subsidy? Why or why not?</p>
+  
+  <h3>Secondary Objectives</h3>
+  <ul>
+    <li>Diagnose friction across funnel stages (discover → generate → order → receive → build)</li>
+    <li>Understand perceived value, trust, and emotional response</li>
+    <li>Capture "jobs to be done" and use-case fit</li>
+    <li>Identify must-fix defects and must-have enhancements</li>
+    <li>Quantify usability via standardized instruments</li>
+    <li>Gather unbiased, undiluted criticism</li>
+  </ul>
+  
+  <h3>Hypotheses to Test</h3>
+  <ol>
+    <li>Parents perceive the service as a time-saver for creative activities</li>
+    <li>Children feel pride in building "their own idea," driving word-of-mouth</li>
+    <li>Fulfillment delays or missing parts significantly degrade trust</li>
+    <li>Instruction clarity directly correlates with build satisfaction</li>
+    <li>Price sensitivity is moderated by personalization value</li>
+    <li>The discover-to-order flow can be completed in under 15 minutes</li>
+  </ol>
+  
+  <h3>Success Criteria for This Pilot</h3>
+  <table>
+    <tr><th>Metric</th><th>Target</th></tr>
+    <tr><td>Repeat-Intent Rate (≥8/10 on intent scale)</td><td>≥2 of 10 participants</td></tr>
+    <tr><td>System Usability Scale (SUS)</td><td>≥70</td></tr>
+    <tr><td>Task Success Rate (median)</td><td>≥80%</td></tr>
+    <tr><td>Critical usability blockers</td><td>≤1</td></tr>
+    <tr><td>Qualitative "love" signals</td><td>≥3 strong advocacy quotes</td></tr>
+    <tr><td>Critical safety/ethics findings</td><td>0</td></tr>
+  </table>
+</section>
+
+<section id="scope">
+  <h2>B. Scope & Constraints</h2>
+  
+  <h3>In-Scope</h3>
+  <ul>
+    <li>Recruitment, screening, and consent collection</li>
+    <li>Observed first-order sessions on beta site (access via one-time code)</li>
+    <li>Fulfillment tracking and communication</li>
+    <li>At-home build phase monitoring</li>
+    <li>Post-build survey and optional follow-up interview</li>
+    <li>Data collection, analysis, and final report</li>
+  </ul>
+  
+  <h3>Out-of-Scope</h3>
+  <ul>
+    <li>Custom engineering changes during the test period</li>
+    <li>Press, PR, or paid advertising</li>
+    <li>Brand trademark usage beyond these guidelines</li>
+    <li>Interventions that could bias participant behavior</li>
+    <li>Longitudinal tracking beyond the 30–60 day intent question</li>
+  </ul>
+  
+  <h3>Assumptions & Dependencies</h3>
+  <ul>
+    <li>Beta site is functional and stable for test sessions</li>
+    <li>One-time access code distribution protocol is operational</li>
+    <li>Parts sourcing pipeline can fulfill orders within stated SLAs</li>
+    <li>Shipping to contiguous US completes within 7–10 business days</li>
+  </ul>
+</section>
+
+<section id="roles">
+  <h2>C. Roles & Responsibilities</h2>
+  
+  <h3>Campaign Manager (Third-Party, Neutral)</h3>
+  <p><strong>Fee:</strong> $500 total</p>
+  <ul>
+    <li>Plan and validate test protocol with founders</li>
+    <li>Recruit ~30 candidates, downselect to 10 participants</li>
+    <li>Schedule and facilitate observed ordering sessions</li>
+    <li>Ensure informed consent and recording compliance</li>
+    <li>Manage data collection and secure storage</li>
+    <li>Analyze results and produce final report</li>
+    <li>Provide weekly status updates to founders</li>
+  </ul>
+  
+  <h3>Founders (BrickBuilder)</h3>
+  <ul>
+    <li>Validate test plan before recruitment begins</li>
+    <li>Provide unique access codes for each session</li>
+    <li>Enable fulfillment and shipping</li>
+    <li>Review and approve downselection to 10 participants</li>
+    <li>Attend weekly 30-minute check-ins</li>
+    <li>Receive and act on final deliverables</li>
+  </ul>
+  
+  <h3>Participants</h3>
+  <p><strong>Profile:</strong> Mothers in contiguous US, middle-income, with children ages 5–12 (preference for boys), primary or shared household purchaser for children's activities.</p>
+  <p><strong>Incentive:</strong> Fully covered parts & shipping for one custom build (~$50 cap per participant)</p>
+  <p><strong>Commitments:</strong> Consent to recording, one 30–45 min observed session, build at home with child, post-build survey (15 min), optional follow-up interview (15–20 min).</p>
+</section>
+
+<div class="page-break"></div>
+
+<section id="recruitment">
+  <h2>D. Recruitment Plan & Screener</h2>
+  
+  <h3>Recruitment Strategy</h3>
+  <ul>
+    <li><strong>Target:</strong> Source ~30 qualified candidates; downselect to 10</li>
+    <li><strong>Channels:</strong> Personal networks, parent groups (Facebook, Nextdoor), moderated online panels, local community boards, school newsletters</li>
+    <li><strong>Avoid:</strong> Forums that skew to extreme brick enthusiasts or hobbyists</li>
+  </ul>
+  
+  <h3>Desired Mix (Final 10)</h3>
+  <ul>
+    <li>Geographic spread across contiguous US (at least 3 regions)</li>
+    <li>Child ages distributed 5–8 and 9–12</li>
+    <li>Experience levels: 3 novice, 4 intermediate, 3 experienced</li>
+    <li>No conflicts of interest</li>
+  </ul>
+  
+  <h3>Screener Questionnaire</h3>
+  <p><em>See Appendix B for full copy-paste version with pass/fail logic.</em></p>
+  <ol>
+    <li><strong>Location:</strong> What state do you live in? <em>[Must be contiguous US]</em></li>
+    <li><strong>Children:</strong> Ages of children in household? <em>[Must include at least one 5–12]</em></li>
+    <li><strong>Child gender:</strong> What are the genders of your children ages 5–12? <em>[Preference for boys]</em></li>
+    <li><strong>Purchasing role:</strong> Who typically purchases toys/activities for your children? <em>[Must be primary or shared]</em></li>
+    <li><strong>Brick experience:</strong> How often do you buy brick-building sets? <em>[Categorize: novice/intermediate/advanced]</em></li>
+    <li><strong>Income bracket:</strong> Which range best describes household income? <em>[Target middle-income bands]</em></li>
+    <li><strong>Device/internet:</strong> Do you have a computer with webcam and reliable internet for a video call? <em>[Must be yes]</em></li>
+    <li><strong>Availability:</strong> Are you available for a 45-min video call during [DATE RANGE]? <em>[Must be yes]</em></li>
+    <li><strong>Recording consent:</strong> Are you comfortable being recorded for research purposes? <em>[Must be yes]</em></li>
+    <li><strong>Conflicts:</strong> Are you or anyone in your household employed by or affiliated with BrickBuilder, the LEGO Group, or similar companies? <em>[Must be no]</em></li>
+  </ol>
+  
+  <h3>Downselection Rubric</h3>
+  <table>
+    <tr><th>Criterion</th><th>Weight</th></tr>
+    <tr><td>Persona fit (child age, purchasing role)</td><td>30%</td></tr>
+    <tr><td>Experience level distribution</td><td>25%</td></tr>
+    <tr><td>Geographic diversity</td><td>15%</td></tr>
+    <tr><td>Scheduling reliability</td><td>20%</td></tr>
+    <tr><td>Absence of conflicts</td><td>10%</td></tr>
+  </table>
+</section>
+
+<section id="session">
+  <h2>E. Session Protocol: Observed First-Order Flow</h2>
+  
+  <h3>Setup (5 min)</h3>
+  <ul>
+    <li>Confirm recording consent using standardized script (Appendix A)</li>
+    <li>Provide unique access code LIVE at session start (prevents prior exploration)</li>
+    <li>Request child be present for ideation/selection steps if feasible</li>
+    <li>Remind participant to think aloud throughout</li>
+  </ul>
+  
+  <h3>Observation Goals</h3>
+  <ul>
+    <li>Task completion through full funnel: discover → choose idea → generate model → review → place order</li>
+    <li>Time on task per funnel step</li>
+    <li>Points of confusion (navigation, terminology, pricing, trust markers)</li>
+    <li>Emotional cues (delight, hesitation, frustration)</li>
+    <li>Parent/child collaboration dynamics</li>
+    <li>Perceived value and willingness-to-pay commentary</li>
+  </ul>
+  
+  <h3>Standardized Tasks</h3>
+  <ol>
+    <li>"Show me how you'd start creating a new custom build."</li>
+    <li>"Pick an idea that your child gets excited about."</li>
+    <li>"Get to a point where you feel ready to place an order."</li>
+    <li>"Before you click purchase, tell me about any hesitations you have."</li>
+  </ol>
+  
+  <h3>Minimal-Intervention Rules</h3>
+  <ul>
+    <li>Use neutral prompts only: "Please continue thinking aloud." / "What are you looking for?"</li>
+    <li>No leading hints or suggestions</li>
+    <li>If stuck >60 seconds, offer standardized nudge (Appendix A)</li>
+    <li>Note all interventions with timestamps</li>
+  </ul>
+  
+  <h3>Captures Per Session</h3>
+  <ul>
+    <li>Screen recording + audio (+ optional camera if consented)</li>
+    <li>Timestamped facilitator notes</li>
+    <li>Binary task success per step (pass/fail)</li>
+    <li>Single-Ease Question (SEQ) after each critical step (1–7 scale)</li>
+    <li>Post-session SUS or UMUX-Lite (Appendix C)</li>
+  </ul>
+</section>
+
+<div class="page-break"></div>
+
+<section id="fulfillment">
+  <h2>F. Fulfillment & Build Tracking</h2>
+  
+  <h3>Post-Session Actions</h3>
+  <ol>
+    <li>Manager confirms order was successfully placed</li>
+    <li>Manager shares tracking information with participant within 24 hours</li>
+    <li>Schedule approximate build window (suggest 1–2 days after delivery)</li>
+    <li>Provide build instructions and support contact</li>
+  </ol>
+  
+  <h3>Build Phase (Participant at Home)</h3>
+  <ul>
+    <li>Participant builds with child; manager does not coach or intervene</li>
+    <li>Participant logs approximate build time</li>
+    <li>Participant notes any missing parts or instruction issues</li>
+  </ul>
+  
+  <h3>Required Submissions</h3>
+  <ul>
+    <li>3–5 photos of completed build (or short video clip)</li>
+    <li>One-sentence caption from the child: "What did you make?"</li>
+    <li>Self-reported build time (minutes)</li>
+    <li>Any issues encountered (missing parts, unclear steps)</li>
+  </ul>
+  
+  <h3>Tracking Log (Manager Maintains)</h3>
+  <table>
+    <tr><th>Field</th><th>Description</th></tr>
+    <tr><td>Order Date</td><td>Date order placed during session</td></tr>
+    <tr><td>Ship Date</td><td>Date package shipped</td></tr>
+    <tr><td>Delivery Date</td><td>Date package delivered</td></tr>
+    <tr><td>Missing Parts</td><td>Yes/No + notes</td></tr>
+    <tr><td>Build Time</td><td>Minutes reported by participant</td></tr>
+    <tr><td>Issues</td><td>Instruction clarity problems, other</td></tr>
+  </table>
+</section>
+
+<section id="postbuild">
+  <h2>G. Post-Build Survey & Interview</h2>
+  
+  <h3>Timing</h3>
+  <p>Administer within 48–72 hours of build completion.</p>
+  
+  <h3>Quantitative Section (10–15 items)</h3>
+  <table class="metric-table">
+    <tr><th>Item</th><th>Scale</th></tr>
+    <tr><td>NPS: "How likely are you to recommend BrickBuilder to a friend like you?"</td><td>0–10</td></tr>
+    <tr><td>UMUX-Lite Item 1: "[Product] capabilities meet my requirements."</td><td>1–7 Agree</td></tr>
+    <tr><td>UMUX-Lite Item 2: "[Product] is easy to use."</td><td>1–7 Agree</td></tr>
+    <tr><td>Repeat-Intent: "How likely are you to order another build within 30–60 days without any subsidy?"</td><td>0–10</td></tr>
+    <tr><td>Willingness-to-Pay: "What would you pay for this experience?" </td><td>Brackets: $0, $1–25, $26–50, $51–75, $76+</td></tr>
+    <tr><td>Instruction Clarity: "I could follow the build instructions without confusion."</td><td>1–5 Agree</td></tr>
+    <tr><td>Fulfillment Trust: "Shipping speed and completeness met my expectations."</td><td>1–5 Agree</td></tr>
+    <tr><td>Value vs. Effort: "The result was worth the time and steps required."</td><td>1–5 Agree</td></tr>
+    <tr><td>Child Delight: "My child was proud of the result."</td><td>1–5 Agree</td></tr>
+  </table>
+  
+  <h3>Qualitative Section (5–7 prompts)</h3>
+  <ol>
+    <li><strong>NPS Why:</strong> "What's the main reason for your score?"</li>
+    <li><strong>Repeat-Intent Why:</strong> "What would tip you from 'no' to 'yes' on ordering again?"</li>
+    <li><strong>Job-to-Be-Done:</strong> "When I wanted to [help my child create something unique / occupy a rainy afternoon / encourage creativity], BrickBuilder [did/did not] help because…"</li>
+    <li><strong>Instruction Breakdown:</strong> "Where exactly did clarity break down, if anywhere?"</li>
+    <li><strong>Child Quote:</strong> "In your child's own words, how did they describe their build?"</li>
+    <li><strong>Top 3 Frictions:</strong> Rank the three most frustrating aspects.</li>
+    <li><strong>Top 3 Delights:</strong> Rank the three best aspects.</li>
+    <li><strong>Magic Wand:</strong> "If you could magically fix one thing, what would it be and why?"</li>
+  </ol>
+  
+  <h3>Optional Follow-Up Interview (15–20 min)</h3>
+  <p>Conduct with 3–5 participants for deeper exploration. Use standardized guide (Appendix A) to probe "why" behind intent scores and surface unarticulated needs.</p>
+</section>
+
+<div class="page-break"></div>
+
+<section id="metrics">
+  <h2>H. Metrics, Analysis Plan & Success Criteria</h2>
+  
+  <h3>Core Metrics</h3>
+  <table>
+    <tr><th>Metric</th><th>Definition</th><th>Target</th></tr>
+    <tr><td>Repeat-Intent Rate</td><td>% scoring ≥8/10 on 30–60 day intent</td><td>≥20% (2/10)</td></tr>
+    <tr><td>Task Success Rate</td><td>% completing each funnel step without critical failure</td><td>≥80% median</td></tr>
+    <tr><td>Time-on-Task</td><td>Median and P90 per step</td><td>Total <15 min</td></tr>
+    <tr><td>SEQ per Step</td><td>Single-Ease Question (1–7)</td><td>≥5.0 mean</td></tr>
+    <tr><td>SUS / UMUX-Lite</td><td>Standardized usability score</td><td>SUS ≥70 / UMUX ≥65</td></tr>
+    <tr><td>NPS</td><td>Net Promoter Score (-100 to +100)</td><td>Positive</td></tr>
+    <tr><td>Fulfillment SLA</td><td>Median ship-to-delivery days</td><td>≤10 days</td></tr>
+    <tr><td>Missing Parts Rate</td><td>% of orders with missing parts</td><td>≤10%</td></tr>
+    <tr><td>"Love" Signal Count</td><td>Strong advocacy quotes identified</td><td>≥3</td></tr>
+  </table>
+  
+  <h3>Issue Taxonomy</h3>
+  <table>
+    <tr><th>Severity</th><th>Definition</th></tr>
+    <tr><td>Critical</td><td>Prevents task completion; no workaround</td></tr>
+    <tr><td>Major</td><td>Significant friction; workaround exists but painful</td></tr>
+    <tr><td>Minor</td><td>Noticeable but does not impede completion</td></tr>
+  </table>
+  
+  <h3>Analysis Approach</h3>
+  <ol>
+    <li><strong>Triangulation:</strong> Cross-reference quant scores with qual verbatims</li>
+    <li><strong>Theme Coding:</strong> Code pain points and delights; map to funnel stages</li>
+    <li><strong>Prioritization:</strong> Impact × Effort matrix for top 5 recommendations</li>
+    <li><strong>Convergent Analysis:</strong> Identify where quant and qual agree/disagree</li>
+  </ol>
+</section>
+
+<section id="bias">
+  <h2>I. Bias-Reduction & Research Quality Safeguards</h2>
+  
+  <ul>
+    <li><strong>Third-Party Neutrality:</strong> Campaign manager is explicitly introduced as an independent researcher, not part of the product team</li>
+    <li><strong>Blinding:</strong> No pre-session exposure to site; access code provided only at session start</li>
+    <li><strong>Standardized Scripts:</strong> All prompts designed to be non-leading (Appendix A)</li>
+    <li><strong>Brutal Honesty Preamble:</strong> Consent includes explicit permission and encouragement to share criticism</li>
+    <li><strong>Separate Assessments:</strong> Distinguish parent purchasing calculus from child delight—ask both explicitly</li>
+    <li><strong>Recording & Transcription:</strong> Reduces note-taking bias; enables verbatim quote extraction</li>
+    <li><strong>Report Standards:</strong> Include raw anonymized quotes and example clips; avoid cherry-picking</li>
+  </ul>
+</section>
+
+<section id="legal">
+  <h2>J. Legal, Ethics, Privacy & Trademark</h2>
+  
+  <h3>Informed Consent Requirements</h3>
+  <ul>
+    <li>Recording consent (audio, screen, optional video)</li>
+    <li>Data use limited to internal research purposes</li>
+    <li>Right to withdraw at any time without penalty</li>
+    <li>Data storage duration (recommend 12 months, then deletion)</li>
+    <li>Anonymization in all reports</li>
+  </ul>
+  
+  <h3>Child Participation</h3>
+  <ul>
+    <li>Parent/guardian must consent to child's presence</li>
+    <li>No direct child data collected beyond first name and age bracket</li>
+    <li>Images of child optional and only with explicit permission; faces obscured in reports unless expressly permitted</li>
+  </ul>
+  
+  <h3>Data Handling</h3>
+  <ul>
+    <li>Store recordings and data securely (encrypted cloud storage)</li>
+    <li>Share only with BrickBuilder founders and authorized personnel</li>
+    <li>Delete participant data upon request</li>
+    <li>No sale or transfer of data to third parties</li>
+  </ul>
+  
+  <h3>Non-Affiliation Disclaimer (Full)</h3>
+  <div class="disclaimer">
+    BrickBuilder is an independent service and is not affiliated with, endorsed by, or sponsored by the LEGO Group or any other brick-building toy manufacturer. "LEGO" is a trademark of the LEGO Group, which does not sponsor, authorize, or endorse this product or research. All references to "bricks" or "brick-building" refer to compatible brick-building systems generally.
+  </div>
+  
+  <h3>Testing Terms Statement</h3>
+  <p>This is an exploratory research program for product development purposes. Participation is non-binding and does not constitute a commercial offer. Participants have no obligation to purchase beyond the provided incentive (one covered build). BrickBuilder reserves the right to modify or discontinue the service at any time.</p>
+</section>
+
+<div class="page-break"></div>
+
+<section id="logistics">
+  <h2>K. Logistics, Budget & Timeline</h2>
+  
+  <h3>Budget Breakdown</h3>
+  <table>
+    <tr><th>Category</th><th>Amount</th><th>Notes</th></tr>
+    <tr><td>Campaign Manager Fee</td><td>$500</td><td>Planning, recruitment, facilitation, analysis, reporting</td></tr>
+    <tr><td>Participant Build Costs</td><td>$500</td><td>Parts & shipping for 10 participants (~$50/participant cap)</td></tr>
+    <tr><td><strong>Total</strong></td><td><strong>$1,000</strong></td><td></td></tr>
+  </table>
+  
+  <h3>Timeline (8 Weeks Total)</h3>
+  <table>
+    <tr><th>Week</th><th>Phase</th><th>Activities</th></tr>
+    <tr><td>1–2</td><td>Manager Onboarding</td><td>Scout candidates, interview, select, contract, validate test plan</td></tr>
+    <tr><td>3–4</td><td>Recruitment</td><td>Distribute screener, collect ~30 responses, downselect to 10, schedule sessions</td></tr>
+    <tr><td>5</td><td>Observed Sessions</td><td>Conduct 10 sessions (2/day pace), collect session artifacts</td></tr>
+    <tr><td>6–7</td><td>Fulfillment & Build</td><td>Ship orders, participants build at home, collect photos/feedback</td></tr>
+    <tr><td>8</td><td>Analysis & Report</td><td>Administer post-build surveys, analyze data, deliver final report</td></tr>
+  </table>
+  
+  <h3>Weekly Check-Ins</h3>
+  <ul>
+    <li>Short status email every Friday</li>
+    <li>30-minute video sync with founders weekly</li>
+    <li>Escalate blockers immediately via email/Slack</li>
+  </ul>
+  
+  <h3>Deliverables Schedule</h3>
+  <table>
+    <tr><th>Deliverable</th><th>Due</th></tr>
+    <tr><td>Finalized Test Plan</td><td>End of Week 2</td></tr>
+    <tr><td>Screening Dataset + Downselection Rationale</td><td>End of Week 4</td></tr>
+    <tr><td>Session Artifacts (recordings, notes, logs)</td><td>End of Week 5</td></tr>
+    <tr><td>Build Phase Artifacts</td><td>End of Week 7</td></tr>
+    <tr><td>Final Report + All Data</td><td>End of Week 8</td></tr>
+  </table>
+</section>
+
+<section id="deliverables">
+  <h2>L. Deliverables Checklist</h2>
+  
+  <p>The campaign manager must submit all of the following:</p>
+  
+  <h3>Planning Phase</h3>
+  <ul class="checklist">
+    <li>Finalized test plan (validated by founders before recruitment)</li>
+    <li>Screener questionnaire (deployed and functional)</li>
+  </ul>
+  
+  <h3>Recruitment Phase</h3>
+  <ul class="checklist">
+    <li>Screening dataset (all ~30 responses)</li>
+    <li>Downselection rationale document</li>
+    <li>Final participant roster (10 confirmed)</li>
+    <li>Session schedule</li>
+  </ul>
+  
+  <h3>Session Phase</h3>
+  <ul class="checklist">
+    <li>Screen recordings with audio (10 sessions)</li>
+    <li>Timestamped facilitator notes per session</li>
+    <li>Task success logs per step</li>
+    <li>SEQ scores per critical step</li>
+    <li>Post-session SUS/UMUX-Lite scores</li>
+  </ul>
+  
+  <h3>Build Phase</h3>
+  <ul class="checklist">
+    <li>Fulfillment tracking log (order/ship/delivery dates)</li>
+    <li>Missing parts incident log</li>
+    <li>Build photos/videos (3–5 per participant)</li>
+    <li>Child quotes ("What did you make?")</li>
+    <li>Self-reported build times</li>
+  </ul>
+  
+  <h3>Analysis Phase</h3>
+  <ul class="checklist">
+    <li>Quantitative results spreadsheet (sessions.csv, survey.csv, fulfillment.csv)</li>
+    <li>Qualitative synthesis document (themes, quotes.csv)</li>
+    <li>Issue severity × frequency table</li>
+    <li>Top 5 prioritized recommendations with Impact × Effort</li>
+    <li>Executive readout (≤5 slides or 1–2 page summary)</li>
+    <li>Data dictionary</li>
+    <li>One-page "Next Steps" with risks and assumptions</li>
+  </ul>
+</section>
+
+<div class="page-break"></div>
+
+<section id="appendices">
+  <h2>M. Appendices</h2>
+  
+  <h3>Appendix A: Standardized Scripts</h3>
+  
+  <h4>Opening Consent Script</h4>
+  <div class="script-box">
+    <p>"Thank you for joining today. My name is [NAME] and I'm an independent researcher hired on behalf of the BrickBuilder team.</p>
+    <p>Before we begin, I need to confirm a few things:</p>
+    <p>I'll be recording this session; your screen, our audio, and optionally your camera if you're comfortable. This recording is only for research purposes and will be shared only with BrickBuilder's founders. Is that okay?</p>
+    <p><strong>Most importantly: I want your honest, unfiltered reactions.</strong> The best thing you can do is be brutally honest. If something is confusing, frustrating, or feels broken, please say so. If you hate something, tell me. Criticism is exactly what we need to make this better. You have full permission to be as critical as you want.</p>
+    <p>Do you have any questions before we start?"</p>
+  </div>
+  
+  <h4>Think-Aloud Prompts (Non-Leading)</h4>
+  <div class="script-box">
+    <ul>
+      <li>"What are you thinking right now?"</li>
+      <li>"What are you looking for?"</li>
+      <li>"Please continue thinking aloud."</li>
+      <li>"Tell me what's going through your mind."</li>
+      <li>"What do you expect to happen next?"</li>
+    </ul>
+  </div>
+  
+  <h4>Stuck Escalation (>60 seconds)</h4>
+  <div class="script-box">
+    <p><em>Use only after participant has been stuck for more than 60 seconds without progress:</em></p>
+    <p>"I can see you're looking for something. Without me telling you what to do, can you describe what you're trying to accomplish?"</p>
+    <p><em>If still stuck after another 30 seconds:</em></p>
+    <p>"Let's note this as a point where the interface wasn't clear. For the purposes of moving forward, [provide minimal directional hint]. But this is valuable feedback."</p>
+  </div>
+  
+  <h4>Closing Script</h4>
+  <div class="script-box">
+    <p>"Great, you've completed the order. Here's what happens next:</p>
+    <ul>
+      <li>I'll send you tracking information within 24 hours</li>
+      <li>Your parts should arrive within 7–10 business days</li>
+      <li>Once they arrive, please build with your child whenever convenient</li>
+      <li>After building, send me 3–5 photos and ask your child: 'What did you make?'</li>
+      <li>I'll then send a short survey, which should take about 15 minutes</li>
+    </ul>
+    <p>Any questions? Thank you so much for your time today!"</p>
+  </div>
+  
+  <h4>Follow-Up Interview Guide (15–20 min)</h4>
+  <div class="script-box">
+    <ol>
+      <li>"Walk me through the moment you decided whether you'd order again. What was going through your mind?"</li>
+      <li>"You rated [X] on the repeat-intent question. Help me understand what would need to change to move that number up."</li>
+      <li>"Tell me about the build experience. What surprised you, good or bad?"</li>
+      <li>"How did your child react when they saw the finished result?"</li>
+      <li>"If a friend asked you about BrickBuilder, what would you tell them?"</li>
+      <li>"What's the one thing that would make you tell everyone you know about this?"</li>
+    </ol>
+  </div>
+  
+  <h3>Appendix B: Screener Questionnaire (Full)</h3>
+  
+  <table>
+    <tr><th>#</th><th>Question</th><th>Options</th><th>Pass Criteria</th></tr>
+    <tr><td>1</td><td>What state do you live in?</td><td>[Dropdown: all US states]</td><td>Contiguous US (exclude AK, HI)</td></tr>
+    <tr><td>2</td><td>How many children live in your household?</td><td>0 / 1 / 2 / 3 / 4+</td><td>≥1</td></tr>
+    <tr><td>3</td><td>What are the ages of your children?</td><td>[Multi-select: Under 5, 5–8, 9–12, 13–17, 18+]</td><td>Must include 5–8 or 9–12</td></tr>
+    <tr><td>4</td><td>What are the genders of your children ages 5–12?</td><td>Boy(s) only / Girl(s) only / Both / Prefer not to say</td><td>Preference: includes boys</td></tr>
+    <tr><td>5</td><td>Who typically purchases toys and activities for your children?</td><td>I do / My partner does / We share equally / Other</td><td>"I do" or "We share equally"</td></tr>
+    <tr><td>6</td><td>How often do you purchase brick-building sets (like compatible bricks)?</td><td>Never / 1–2x per year / 3–5x per year / 6+ per year</td><td>Any (categorize level)</td></tr>
+    <tr><td>7</td><td>Which best describes your household income?</td><td>Under $40K / $40–75K / $75–125K / $125–200K / Over $200K / Prefer not to say</td><td>$40–125K preferred</td></tr>
+    <tr><td>8</td><td>Do you have a computer with webcam and reliable internet for a 45-min video call?</td><td>Yes / No</td><td>Yes</td></tr>
+    <tr><td>9</td><td>Are you available for a 45-min video call during [DATE RANGE]?</td><td>Yes / No / Maybe</td><td>Yes or Maybe</td></tr>
+    <tr><td>10</td><td>Are you comfortable with your screen and audio being recorded for research?</td><td>Yes / No</td><td>Yes</td></tr>
+    <tr><td>11</td><td>Are you or anyone in your household employed by or affiliated with BrickBuilder, the LEGO Group, or similar toy companies?</td><td>Yes / No</td><td>No</td></tr>
+    <tr><td>12</td><td>Please provide your email address for follow-up.</td><td>[Text field]</td><td>Valid email</td></tr>
+  </table>
+  
+  <p><strong>Experience Level Categorization (Q6):</strong></p>
+  <ul>
+    <li><strong>Novice:</strong> Never or 1–2x per year</li>
+    <li><strong>Intermediate:</strong> 3–5x per year</li>
+    <li><strong>Advanced:</strong> 6+ per year</li>
+  </ul>
+  
+  <h3>Appendix C: Survey Instruments</h3>
+  
+  <h4>Single-Ease Question (SEQ)</h4>
+  <p>Administered after each critical task step.</p>
+  <div class="script-box">
+    <p>"Overall, how easy or difficult was this task?"</p>
+    <p>Scale: 1 (Very Difficult) – 2 – 3 – 4 (Neutral) – 5 – 6 – 7 (Very Easy)</p>
+    <p><strong>Scoring:</strong> Mean per step; target ≥5.0</p>
+  </div>
+  
+  <h4>UMUX-Lite (2 items)</h4>
+  <p>Administered post-session. Alternative to full SUS when time is limited.</p>
+  <div class="script-box">
+    <p><strong>Item 1:</strong> "[BrickBuilder's] capabilities meet my requirements."</p>
+    <p><strong>Item 2:</strong> "[BrickBuilder] is easy to use."</p>
+    <p>Scale: 1 (Strongly Disagree) – 7 (Strongly Agree)</p>
+    <p><strong>Scoring:</strong> ((Sum of items - 2) / 12) × 100 = Score (0–100)</p>
+    <p><strong>Target:</strong> ≥65</p>
+  </div>
+  
+  <h4>System Usability Scale (SUS) – 10 Items</h4>
+  <p>Full version if time permits. Scale: 1 (Strongly Disagree) – 5 (Strongly Agree)</p>
+  <div class="script-box">
+    <ol>
+      <li>I think that I would like to use this system frequently.</li>
+      <li>I found the system unnecessarily complex.</li>
+      <li>I thought the system was easy to use.</li>
+      <li>I think that I would need the support of a technical person to use this system.</li>
+      <li>I found the various functions in this system were well integrated.</li>
+      <li>I thought there was too much inconsistency in this system.</li>
+      <li>I would imagine that most people would learn to use this system very quickly.</li>
+      <li>I found the system very cumbersome to use.</li>
+      <li>I felt very confident using the system.</li>
+      <li>I needed to learn a lot of things before I could get going with this system.</li>
+    </ol>
+    <p><strong>Scoring:</strong> For odd items: score - 1. For even items: 5 - score. Sum all, multiply by 2.5. Range: 0–100.</p>
+    <p><strong>Target:</strong> ≥70 (industry average ~68)</p>
+  </div>
+  
+  <h4>Net Promoter Score (NPS)</h4>
+  <div class="script-box">
+    <p>"How likely are you to recommend BrickBuilder to a friend or family member like you?"</p>
+    <p>Scale: 0 (Not at all likely) – 10 (Extremely likely)</p>
+    <p><strong>Follow-up:</strong> "What is the primary reason for your score?"</p>
+    <p><strong>Scoring:</strong> Detractors (0–6), Passives (7–8), Promoters (9–10). NPS = %Promoters - %Detractors</p>
+  </div>
+  
+  <h4>Repeat-Intent Question</h4>
+  <div class="script-box">
+    <p>"How likely are you to order another BrickBuilder set within the next 30–60 days, paying full price without any subsidy or discount?"</p>
+    <p>Scale: 0 (Definitely will not) – 10 (Definitely will)</p>
+    <p><strong>Follow-up:</strong> "What would need to change to move your answer closer to 10?"</p>
+    <p><strong>Success threshold:</strong> ≥8 indicates strong intent</p>
+  </div>
+  
+  <h4>Willingness-to-Pay (WTP)</h4>
+  <div class="script-box">
+    <p>"If you were paying out of pocket for this entire experience (parts, instructions, shipping), which range feels right to you?"</p>
+    <ul>
+      <li>$0 – I wouldn't pay for this</li>
+      <li>$1–25</li>
+      <li>$26–50</li>
+      <li>$51–75</li>
+      <li>$76–100</li>
+      <li>More than $100</li>
+    </ul>
+  </div>
+  
+  <h3>Appendix D: CSV/Spreadsheet Schemas</h3>
+  
+  <h4>sessions.csv</h4>
+  <p><code>participant_id, step_id, step_name, success, time_sec, seq_score, notes</code></p>
+  <p>Example: <code>P001, 1, discover, TRUE, 45, 6, "Found homepage easily"</code></p>
+  
+  <h4>survey.csv</h4>
+  <p><code>participant_id, nps, nps_why, sus_score, umux_score, repeat_intent, repeat_why, wtp_bucket, instruction_clarity, fulfillment_trust, value_vs_effort, child_delight, top_friction_1, top_friction_2, top_friction_3, top_delight_1, top_delight_2, top_delight_3, magic_wand</code></p>
+  
+  <h4>fulfillment.csv</h4>
+  <p><code>participant_id, order_date, ship_date, delivery_date, ship_days, missing_parts, missing_parts_notes, build_time_min, instruction_issues</code></p>
+  
+  <h4>quotes.csv</h4>
+  <p><code>participant_id, quote_text, source, theme, sentiment, funnel_stage</code></p>
+  <p>Example: <code>P003, "My daughter couldn't stop showing her grandma on FaceTime", interview, child_delight, positive, post_build</code></p>
+  
+  <h3>Appendix E: Risk Register Template</h3>
+  
+  <table>
+    <tr><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Mitigation</th><th>Owner</th></tr>
+    <tr><td>Low recruitment response</td><td>Medium</td><td>High</td><td>Expand channels; extend timeline by 1 week</td><td>Manager</td></tr>
+    <tr><td>Site technical issues during session</td><td>Low</td><td>Critical</td><td>Pre-test site; have backup session slots</td><td>Founders</td></tr>
+    <tr><td>Fulfillment delays exceed 14 days</td><td>Medium</td><td>High</td><td>Communicate proactively; adjust analysis timeline</td><td>Founders</td></tr>
+    <tr><td>Missing parts in shipments</td><td>Low</td><td>Medium</td><td>Expedite replacement; document for analysis</td><td>Founders</td></tr>
+    <tr><td>Participant dropout</td><td>Low</td><td>Medium</td><td>Recruit 12 initially; have 2 backups</td><td>Manager</td></tr>
+    <tr><td>Recording consent withdrawn</td><td>Low</td><td>Low</td><td>Rely on notes; exclude from video analysis</td><td>Manager</td></tr>
+    <tr><td>Budget overrun on parts</td><td>Low</td><td>Medium</td><td>Cap at $50/participant; monitor order totals</td><td>Manager</td></tr>
+  </table>
+  
+</section>
+
+</main>
+
+<footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e0e0e0; font-size: 0.85rem; color: #666; text-align: center;">
+  <p><strong>BrickBuilder Beta Testing Brief</strong> · Version 1.0 · Confidential</p>
+  <p>For questions, contact: [Jacob L. or Jake J.] at [jlindbergapr@gmail.com] or [jakejohnson3700@gmail.com].</p>
+  <p style="margin-top: 8px; font-size: 0.8rem;">BrickBuilder is not affiliated with the LEGO Group.</p>
+</footer>
+
+</body>
+</html>
